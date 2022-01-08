@@ -1,7 +1,7 @@
 @echo off
-:: 3, 4, 26, 29
-set version=5
-set serverfile=generic.bat
+:: 3, 4, 27, 30
+set version=1.1
+set serverfile=genericUpdater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
     if defined updn (
@@ -24,10 +24,10 @@ IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
 if exist %localappdata%\\PaweleConf\\%~nx0 del %localappdata%\\PaweleConf\\%~nx0
 powershell Invoke-WebRequest -Uri https://raw.githubusercontent.com/XaaRii/XaaRis_scripts/main/versions.ini -OutFile "%localappdata%/PaweleConf/versions.ini"
   for /f "delims=" %%x in (%localappdata%/PaweleConf/versions.ini) do %%x 2>NUL
-  IF %version% NEQ %versionGeneric% call :update
+  IF %version% NEQ %versionGenericUpdater% call :update
   goto :main
 :update
-echo Current version: %version%               Available version: %versionGeneric%
+echo Current version: %version%               Available version: %versionGenericUpdater%
 if exist %localappdata%/PaweleConf/lasterror (
   echo. & echo Warning! Last update failed with following error code: & powershell Get-Content %localappdata%\\PaweleConf\\lasterror -Head 1 & echo.
 )
