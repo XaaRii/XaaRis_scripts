@@ -1,5 +1,5 @@
 @echo off
-set version=7.1
+set version=7.2
 set serverfile=powercord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -20,7 +20,7 @@ IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
     ) else echo Something's broken. Cannot find variable. Exiting... & exit /B 1
   ) else exit 0
 )
-if exist %localappdata%\\PaweleConf\\%~nx0 del %localappdata%\\PaweleConf\\%~nx0
+if exist %localappdata%\\PaweleConf\\"%~nx0" del %localappdata%\\PaweleConf\\"%~nx0"
 @powershell Invoke-WebRequest -Uri https://raw.githubusercontent.com/XaaRii/XaaRis_scripts/main/versions.ini -OutFile "%localappdata%/PaweleConf/versions.ini"
   for /f "delims=" %%x in (%localappdata%/PaweleConf/versions.ini) do %%x 2>NUL
   IF %version% NEQ %versionPowercordUpdater% call :update
