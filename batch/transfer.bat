@@ -1,8 +1,12 @@
 @echo off
+mode 101,18
 setlocal EnableDelayedExpansion EnableExtensions
 goto main
 :usage
-  echo No arguments specified. >&2
+  echo Drag and drop a file/folder you want to upload on this %~nx0 file. >&2
+  echo Don't worry, even if it looks like it's doing nothing, it works. >&2
+  echo. >&2
+  echo You can also use it from cmd. If you did so, then specify some arguments please: >&2
   echo Usage: >&2
   echo   transfer ^<file^|directory^> >&2        
   echo   ... ^| transfer ^<file_name^> >&2       
