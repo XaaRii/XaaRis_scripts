@@ -10,7 +10,12 @@ goto main
   echo Usage: >&2
   echo   transfer ^<file^|directory^> >&2        
   echo   ... ^| transfer ^<file_name^> >&2       
-  goto :exit
+  if exist %localappdata%\PaweleConf\lasttransfer.txt SET /p lastlink= < %localappdata%\PaweleConf\lasttransfer.txt >NUL
+  if defined lastlink (
+  echo.
+  echo Your last transfer.sh link was:  %lastlink%
+)
+goto :exit
 :main
   if "%~1" == "" goto usage
   timeout.exe /t 0 >nul 2>nul || goto not_tty
@@ -25,18 +30,31 @@ goto main
   pushd "%file%" || goto :exit
   set "full_name=%temp%\%file_name%"
   powershell.exe -Command "Get-ChildItem -Path . -Recurse | Compress-Archive -DestinationPath ""%full_name%"""
-  curl.exe --progress-bar --upload-file "%full_name%" "https://transfer.sh/%file_name%"
+  curl.exe --progress-bar --upload-file "%full_name%" "https://transfer.sh/%file_name%" -o %localappdata%\PaweleConf\transfer.txt
+  type %localappdata%\PaweleConf\transfer.txt
+  move /Y %localappdata%\PaweleConf\transfer.txt %localappdata%\PaweleConf\lasttransfer.txt >NUL
+  del %full_name%
   popd
-  goto :eof
+  goto :exit2
 :not_a_directory
-  curl.exe --progress-bar --upload-file "%file%" "https://transfer.sh/%file_name%"
-  goto :exit
+  curl.exe --progress-bar --upload-file "%file%" "https://transfer.sh/%file_name%" -o %localappdata%\PaweleConf\transfer.txt
+  type %localappdata%\PaweleConf\transfer.txt
+  move /Y %localappdata%\PaweleConf\transfer.txt %localappdata%\PaweleConf\lasttransfer.txt >NUL
+  goto :exit2
 :not_tty
   set "file_name=%~1"
-  curl.exe --progress-bar --upload-file - "https://transfer.sh/%file_name%"
-  goto :exit
+  curl.exe --progress-bar --upload-file - "https://transfer.sh/%file_name%" -o %localappdata%\PaweleConf\transfer.txt
+  type %localappdata%\PaweleConf\transfer.txt
+  move /Y %localappdata%\PaweleConf\transfer.txt %localappdata%\PaweleConf\lasttransfer.txt >NUL
+  goto :exit2
 
 :exit
+  echo.
+  echo Press almost any key to close this window.
+  pause > NUL
+  exit /B 0
+
+:exit2
 echo.
 echo.
 for /f %%a in ('copy /Z "%~f0" nul') do set "Newline=%%a"
