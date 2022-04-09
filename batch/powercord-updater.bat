@@ -1,5 +1,5 @@
 @echo off
-set version=7.4
+set version=8.1
 set serverfile=powercord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -21,8 +21,8 @@ IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
     ) else echo Something's broken. Cannot find variable. Exiting... & exit /B 1
   ) else exit 0
 )
-title Update check
-echo Checking for updates...
+title Update check && echo Checking for updates...
+if NOT exist %localappdata%\\PaweleConf\\ mkdir %localappdata%\\PaweleConf\\
 if exist %localappdata%\\PaweleConf\\"%~nx0" del %localappdata%\\PaweleConf\\"%~nx0"
 @powershell Invoke-WebRequest -Uri https://raw.githubusercontent.com/XaaRii/XaaRis_scripts/main/versions.ini -OutFile "%localappdata%/PaweleConf/versions.ini"
   for /f "delims=" %%x in (%localappdata%/PaweleConf/versions.ini) do %%x 2>NUL
@@ -54,7 +54,7 @@ goto settings
 :mainF
 echo Before we start, i need to make sure where the powercord folder is located.
 echo Current default path is set to: %powercordPath%
-echo if it's somewhere else, please enter it's FULL PATH. If it's correct, leave it empty.
+echo if it's somewhere else, please enter its FULL PATH. If it's correct, leave it empty.
 :ZERO
 set i0=
 set /p i0="> "
@@ -153,9 +153,6 @@ node injectors/index.js inject --no-exit-codes
 echo (Actually, that was already done automatically)
 echo.
 echo.
-if "%runs%"=="0" ( echo Powercord wasn't running before, so no need to start it up now. )
-if "%runs%"=="1" ( echo Starting Discord again... && @powershell -command Invoke-Item %pcpath% 2>&1 && echo Okay, it should be starting now. )
-echo.
 break
 echo Powercord successfully activated.
 if "%i7%"=="yes" goto pullplugin
@@ -188,7 +185,12 @@ cd /d themes
 set counterT=0
 FOR /D %%i IN (*) DO ( echo ------------------------------------- && cd %%i && echo %%i: && git pull && cd .. && set /a counterT=counterT+1 )
 echo ------------------------------------- && echo. && echo ________________________
-if "%i7%"=="yes" echo Successfully updated all %counterT% themes. && goto EXIT
+if "%i7%"=="yes" (
+  echo Successfully updated all %counterT% themes.
+  if "%runs%"=="0" ( echo Powercord wasn't running before, so no need to start it up now. )
+  if "%runs%"=="1" ( echo Starting Discord again... && mshta vbscript:Execute("CreateObject(""Wscript.Shell"").Run ""powershell -NoLogo -Command """"& '%pcpath%'"""""", 0 : window.close") && echo Okay, it should be starting now. )
+  goto EXIT
+)
 echo Successfully updated all %counterT% themes. Press any key to continue to main screen.
 pause > nul
 cls
