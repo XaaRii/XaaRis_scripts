@@ -1,6 +1,6 @@
 @echo off
 :: 3, 4, 27, 30
-set version=1.5
+set version=1.6
 set serverfile=genericUpdater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -22,8 +22,8 @@ IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
     ) else echo Something's broken. Cannot find variable. Exiting... & exit /B 1
   ) else exit 0
 )
-title Update check
-echo Checking for updates...
+title Update check && echo Checking for updates...
+if NOT exist %localappdata%\\PaweleConf\\ mkdir %localappdata%\\PaweleConf\\
 if exist %localappdata%\\PaweleConf\\"%~nx0" del %localappdata%\\PaweleConf\\"%~nx0"
 @powershell Invoke-WebRequest -Uri https://raw.githubusercontent.com/XaaRii/XaaRis_scripts/main/versions.ini -OutFile "%localappdata%/PaweleConf/versions.ini"
   for /f "delims=" %%x in (%localappdata%/PaweleConf/versions.ini) do %%x 2>NUL
