@@ -1,5 +1,5 @@
 @echo off
-set version=8.1
+set version=8.2
 set serverfile=powercord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -154,9 +154,22 @@ echo (Actually, that was already done automatically)
 echo.
 echo.
 break
-echo Powercord successfully activated.
+echo Powercord successfully injected.
 if "%i7%"=="yes" goto pullplugin
+if "%runs%"=="0" ( echo Powercord wasn't running before, so i can't start it up now. )
+if "%runs%"=="1" (
+  del %localappdata%\\PaweleConf\\starter.vbs > NUL
+  timeout 1 > NUL
+  echo Dim WShell >> "%localappdata%/PaweleConf/starter.vbs"
+  echo Set WShell = CreateObject^(^"WScript.Shell^"^) >> "%localappdata%/PaweleConf/starter.vbs"
+  echo WShell.Run "%pcpath%", 0 >> "%localappdata%/PaweleConf/starter.vbs"
+  echo Set WShell = Nothing >> "%localappdata%/PaweleConf/starter.vbs"
+  :::mshta vbscript:Execute("CreateObject(""Wscript.Shell"").Run ""powershell -NoLogo -Command """"& '%pcpath%'"""""", 0 : window.close")
+  wscript %localappdata%/PaweleConf/starter.vbs
+  echo Okay, it should be starting now.
+)
 echo Press any key to continue to main screen.
+title Finished.
 pause > nul
 cls
 goto A
@@ -172,6 +185,7 @@ FOR /D %%i IN (*) DO ( echo ------------------------------------- && cd %%i && e
 echo ------------------------------------- && echo. && echo ________________________
 if "%i7%"=="yes" echo Successfully updated all %counterP% plugins. && goto pulltheme
 echo Successfully updated all %counterP% plugins. Press any key to continue to main screen.
+title Finished.
 pause > nul
 cls
 goto A
@@ -188,10 +202,21 @@ echo ------------------------------------- && echo. && echo ____________________
 if "%i7%"=="yes" (
   echo Successfully updated all %counterT% themes.
   if "%runs%"=="0" ( echo Powercord wasn't running before, so no need to start it up now. )
-  if "%runs%"=="1" ( echo Starting Discord again... && mshta vbscript:Execute("CreateObject(""Wscript.Shell"").Run ""powershell -NoLogo -Command """"& '%pcpath%'"""""", 0 : window.close") && echo Okay, it should be starting now. )
+  if "%runs%"=="1" (
+    del %localappdata%\\PaweleConf\\starter.vbs > NUL
+    timeout 1 > NUL
+    echo Dim WShell >> "%localappdata%/PaweleConf/starter.vbs"
+    echo Set WShell = CreateObject^(^"WScript.Shell^"^) >> "%localappdata%/PaweleConf/starter.vbs"
+    echo WShell.Run "%pcpath%", 0 >> "%localappdata%/PaweleConf/starter.vbs"
+    echo Set WShell = Nothing >> "%localappdata%/PaweleConf/starter.vbs"
+    :::mshta vbscript:Execute("CreateObject(""Wscript.Shell"").Run ""powershell -NoLogo -Command """"& '%pcpath%'"""""", 0 : window.close")
+    wscript %localappdata%/PaweleConf/starter.vbs
+    echo Okay, it should be starting now.
+  )
   goto EXIT
 )
 echo Successfully updated all %counterT% themes. Press any key to continue to main screen.
+title Finished.
 pause > nul
 cls
 goto A
@@ -200,6 +225,7 @@ goto A
 if "%i7%"=="yes" goto pullplugin
 cls
 echo ok. Returning to main menu...
+title Finished.
 timeout 2 > nul
 goto A
 
@@ -227,5 +253,6 @@ goto mainF
 :EXIT
 echo.
 echo Exiting... (press any key to continue)
+title Have a great day ;)
 pause > nul
 exit
