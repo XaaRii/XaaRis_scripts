@@ -1,5 +1,5 @@
 @echo off
-set version=8.2
+set version=8.3
 set serverfile=powercord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -124,7 +124,7 @@ git pull
 echo.
 echo ________________________
 echo If there was an update, i will close your powercord.
-echo Was there an update? (yes/no)
+echo Was there an update? ^(yes/no^)
 :TWO
 set i2=
 set /p i2="> " 
@@ -144,30 +144,20 @@ for /f "skip=1 tokens=* delims=" %%# in ('wmic process where "name='DiscordCanar
 set "runs=1"
 if "%pcpath%"== "" set "runs=0"
 :: if running pc, else skip 
-if "%runs%"=="1" ( echo Killing Discord Canary... && taskkill /F /IM DiscordCanary.exe )
+if "%runs%"=="1" echo Killing Discord Canary... && taskkill /F /IM DiscordCanary.exe
 node injectors/index.js uninject --no-exit-codes
 call npm install
 echo Running npm audit fix now...
 call npm audit fix
 node injectors/index.js inject --no-exit-codes
-echo (Actually, that was already done automatically)
+echo Actually, that was already done automatically
 echo.
 echo.
 break
 echo Powercord successfully injected.
 if "%i7%"=="yes" goto pullplugin
-if "%runs%"=="0" ( echo Powercord wasn't running before, so i can't start it up now. )
-if "%runs%"=="1" (
-  del %localappdata%\\PaweleConf\\starter.vbs > NUL
-  timeout 1 > NUL
-  echo Dim WShell >> "%localappdata%/PaweleConf/starter.vbs"
-  echo Set WShell = CreateObject^(^"WScript.Shell^"^) >> "%localappdata%/PaweleConf/starter.vbs"
-  echo WShell.Run "%pcpath%", 0 >> "%localappdata%/PaweleConf/starter.vbs"
-  echo Set WShell = Nothing >> "%localappdata%/PaweleConf/starter.vbs"
-  :::mshta vbscript:Execute("CreateObject(""Wscript.Shell"").Run ""powershell -NoLogo -Command """"& '%pcpath%'"""""", 0 : window.close")
-  wscript %localappdata%/PaweleConf/starter.vbs
-  echo Okay, it should be starting now.
-)
+if "%runs%"=="0" echo Powercord wasn't running before, so i can't start it up now.
+if "%runs%"=="1" CALL :powercordStartagain
 echo Press any key to continue to main screen.
 title Finished.
 pause > nul
@@ -201,18 +191,8 @@ FOR /D %%i IN (*) DO ( echo ------------------------------------- && cd %%i && e
 echo ------------------------------------- && echo. && echo ________________________
 if "%i7%"=="yes" (
   echo Successfully updated all %counterT% themes.
-  if "%runs%"=="0" ( echo Powercord wasn't running before, so no need to start it up now. )
-  if "%runs%"=="1" (
-    del %localappdata%\\PaweleConf\\starter.vbs > NUL
-    timeout 1 > NUL
-    echo Dim WShell >> "%localappdata%/PaweleConf/starter.vbs"
-    echo Set WShell = CreateObject^(^"WScript.Shell^"^) >> "%localappdata%/PaweleConf/starter.vbs"
-    echo WShell.Run "%pcpath%", 0 >> "%localappdata%/PaweleConf/starter.vbs"
-    echo Set WShell = Nothing >> "%localappdata%/PaweleConf/starter.vbs"
-    :::mshta vbscript:Execute("CreateObject(""Wscript.Shell"").Run ""powershell -NoLogo -Command """"& '%pcpath%'"""""", 0 : window.close")
-    wscript %localappdata%/PaweleConf/starter.vbs
-    echo Okay, it should be starting now.
-  )
+  if "%runs%"=="0" echo Powercord wasn't running before, so no need to start it up now.
+  if "%runs%"=="1" CALL :powercordStartagain
   goto EXIT
 )
 echo Successfully updated all %counterT% themes. Press any key to continue to main screen.
@@ -252,7 +232,22 @@ goto mainF
 
 :EXIT
 echo.
-echo Exiting... (press any key to continue)
-title Have a great day ;)
+echo Exiting... ^(press any key to continue^)
+title Have a great day^!
 pause > nul
 exit
+
+
+:powercordStartagain
+del %localappdata%\\PaweleConf\\starter.vbs > NUL
+    timeout 1 > NUL
+    (
+    echo Dim WShell
+    echo Set WShell = CreateObject^(^"WScript.Shell^"^)
+    echo WShell.Run "%pcpath%", 0
+    echo Set WShell = Nothing
+    )> "%localappdata%/PaweleConf/starter.vbs"
+    timeout 1 > NUL
+    wscript %localappdata%/PaweleConf/starter.vbs
+    echo Okay, it should be starting now.
+goto :EOF
