@@ -1,5 +1,5 @@
 @echo off
-set version=8.3
+set version=9.0
 set serverfile=powercord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -47,12 +47,12 @@ IF /i NOT "%~dp0"=="%localappdata%/PaweleConf/" (
 )
 :main
 REM ------------------ PROGRAM HERE ------------------------
-title Powercord External Updater [by Pawele]
+title Replugged External Updater [by Pawele]
 SETLOCAL EnableExtensions EnableDelayedExpansion
 goto settings
 
 :mainF
-echo Before we start, i need to make sure where the powercord folder is located.
+echo Before we start, i need to make sure where the powercord/replugged folder is located.
 echo Current default path is set to: %powercordPath%
 echo if it's somewhere else, please enter its FULL PATH. If it's correct, leave it empty.
 :ZERO
@@ -69,14 +69,25 @@ cd /d %i0% && (
   goto ZERO
 )
 if "%blankset%"== "nah" goto Qdef
-goto A0
+call :dcversion
+cls
+goto A
+
+:dcversion
+echo Do you use Discord Stable version or Canary version^? (S / C)
+set /p stablecanary="> "
+if /i "%stablecanary%"== "S" goto :EOF
+if /i "%stablecanary%"== "C" goto :EOF
+echo Wrong choice. Try again:
+echo.
+goto dcversion
 
 :Qdef
 echo Would you like to save this path as default one? (yes/no)
 set Qdefalt=
 set /p Qdefalt="> "
 if "%Qdefalt%"== "yes" goto QdefY
-if "%Qdefalt%"== "no" goto A0
+if "%Qdefalt%"== "no" goto A
 echo Wrong choice. Try again:
 echo.
 goto Qdef
@@ -84,20 +95,27 @@ goto Qdef
 :QdefY
 echo ------------- Powercord Updater config [by Pawele] ------------- > %localappdata%\PaweleConf\PowercordUpdate.cfg && echo powercordPath=%i0% >> %localappdata%\PaweleConf\PowercordUpdate.cfg
 echo Default folder updated. Current folder: %i0%
+call :dcversion
 goto A
 
-:A0
-cls
-echo Current folder: %i0%
 :A
+cls
+:Aclearless
+echo Current folder: %i0%
+if /i "%stablecanary%"== "S" echo Chosen discord version: Stable
+if /i "%stablecanary%"== "C" echo Chosen discord version: Canary
 set i7=nah
-title Powercord External Updater [by Pawele]
+title Replugged External Updater [by Pawele]
 echo ________________________
 echo Choose what to update:
-echo   1 - Powercord
+echo   1 - Replugged
 echo   2 - plugins
 echo   3 - themes
 echo   4 - all
+echo.
+echo Other:
+echo   6 - plug replugged
+echo   7 - unplug replugged
 echo.
 echo   0 - exit
 echo ________________________
@@ -107,23 +125,26 @@ if "%i1%"== "1" goto pullpower
 if "%i1%"== "2" goto pullplugin
 if "%i1%"== "3" goto pulltheme
 if "%i1%"== "4" goto pullall
+if "%i1%"== "6" ( call :plugonoff plug && goto :ppN )
+if "%i1%"== "7" ( call :plugonoff unplug && goto :ppN )
 if "%i1%"== "0" goto EXIT
 cls
 echo Wrong choice. Try again:
-goto A
+echo.
+goto Aclearless
 :pullall
 set i7=yes
 goto pullpower
 
 :pullpower
-title Powercord Update Module
+title Replugged Update Module
 cd /d %i0%
 echo.
 echo Checking for updates...
 git pull
 echo.
 echo ________________________
-echo If there was an update, i will close your powercord.
+echo If there was an update, i will have to temporarily close your discord.
 echo Was there an update? ^(yes/no^)
 :TWO
 set i2=
@@ -133,30 +154,75 @@ if "%i2%"== "no" goto ppN
 echo Wrong choice. Try again:
 goto TWO
 
+:plugonoff
+echo Are you sure you want to %~1^? If so, press any key.
+pause > NUL
+if /i "%stablecanary%"== "C" call npm run %~1 canary
+if /i "%stablecanary%"== "S" call npm run %~1 stable
+echo.
+echo To finish, discord must be restarted for changes to take effect.
+echo Would you like me to restart it now? ^(yes/no^)
+:pnres
+set pnloop=
+set /p pnloop="> " 
+if "%pnloop%"== "yes" goto resyes
+if "%pnloop%"== "no" goto :EOF
+echo Wrong choice. Try again:
+goto pnres
+
+:resyes
+if /i "%stablecanary%"== "C" (for /f "skip=1 tokens=* delims=" %%# in ('wmic process where "name='DiscordCanary.exe'" get ExecutablePath') do (
+  set "pcpath=%%#"
+  goto resyesnext
+)
+)
+if /i "%stablecanary%"== "S" (for /f "skip=1 tokens=* delims=" %%# in ('wmic process where "name='Discord.exe'" get ExecutablePath') do (
+  set "pcpath=%%#"
+  goto resyesnext
+)
+)
+:resyesnext
+if "%pcpath%"== "" echo Discord isn't running, thus i cannot start it. && timeout 3 >NUL && goto :EOF
+  echo Killing Discord...
+  if /i "%stablecanary%"== "S" taskkill /F /IM Discord.exe
+  if /i "%stablecanary%"== "C" taskkill /F /IM DiscordCanary.exe
+  timeout 2 >NUL
+  CALL :powercordStartagain
+goto :EOF
+
 :ppY
 echo.
-
-for /f "skip=1 tokens=* delims=" %%# in ('wmic process where "name='DiscordCanary.exe'" get ExecutablePath') do (
+if /i "%stablecanary%"== "C" (for /f "skip=1 tokens=* delims=" %%# in ('wmic process where "name='DiscordCanary.exe'" get ExecutablePath') do (
   set "pcpath=%%#"
   goto rest
+)
+)
+if /i "%stablecanary%"== "S" (for /f "skip=1 tokens=* delims=" %%# in ('wmic process where "name='Discord.exe'" get ExecutablePath') do (
+  set "pcpath=%%#"
+  goto rest
+)
 )
 :rest
 set "runs=1"
 if "%pcpath%"== "" set "runs=0"
 :: if running pc, else skip 
-if "%runs%"=="1" echo Killing Discord Canary... && taskkill /F /IM DiscordCanary.exe
-node injectors/index.js uninject --no-exit-codes
+if /i "%stablecanary%"== "C" (if "%runs%"=="1" echo Killing Discord Canary... && taskkill /F /IM DiscordCanary.exe)
+if /i "%stablecanary%"== "S" (if "%runs%"=="1" echo Killing Discord... && taskkill /F /IM Discord.exe)
+if /i "%stablecanary%"== "C" call npm run unplug canary
+if /i "%stablecanary%"== "S" call npm run unplug stable
 call npm install
 echo Running npm audit fix now...
 call npm audit fix
-node injectors/index.js inject --no-exit-codes
+if /i "%stablecanary%"== "C" call npm run plug canary
+if /i "%stablecanary%"== "S" call npm run plug stable
 echo Actually, that was already done automatically
 echo.
 echo.
 break
-echo Powercord successfully injected.
+if /i "%stablecanary%"== "C" echo Replugged successfully injected into Discord Canary.
+if /i "%stablecanary%"== "S" echo Replugged successfully injected into Discord Stable.
 if "%i7%"=="yes" goto pullplugin
-if "%runs%"=="0" echo Powercord wasn't running before, so i can't start it up now.
+if "%runs%"=="0" echo Discord wasn't running before, so i can't start it up now.
 if "%runs%"=="1" CALL :powercordStartagain
 echo Press any key to continue to main screen.
 title Finished.
@@ -191,7 +257,7 @@ FOR /D %%i IN (*) DO ( echo ------------------------------------- && cd %%i && e
 echo ------------------------------------- && echo. && echo ________________________
 if "%i7%"=="yes" (
   echo Successfully updated all %counterT% themes.
-  if "%runs%"=="0" echo Powercord wasn't running before, so no need to start it up now.
+  if "%runs%"=="0" echo Discord wasn't running before, so no need to start it up now.
   if "%runs%"=="1" CALL :powercordStartagain
   goto EXIT
 )
@@ -203,10 +269,10 @@ goto A
 
 :ppN
 if "%i7%"=="yes" goto pullplugin
-cls
-echo ok. Returning to main menu...
+echo.
+echo Returning to main menu...
 title Finished.
-timeout 2 > nul
+timeout 4 > nul
 goto A
 
 :settings
@@ -249,5 +315,5 @@ del %localappdata%\\PaweleConf\\starter.vbs > NUL
     )> "%localappdata%/PaweleConf/starter.vbs"
     timeout 1 > NUL
     wscript %localappdata%/PaweleConf/starter.vbs
-    echo Okay, it should be starting now.
+    echo Okay, discord should be starting now. ^[You may find it hidden in the right bottom corner^]
 goto :EOF
