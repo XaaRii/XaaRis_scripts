@@ -1,6 +1,6 @@
 @echo off
 :: 3, 4, 27, 30
-set version=1.6
+set version=1.7
 set serverfile=genericUpdater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -14,7 +14,7 @@ IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
           exit /B 1
         )
       )
-      move /y "%localappdata%\\PaweleConf\\temp" "%updn%" >nul
+      type "%localappdata%\\PaweleConf\\temp" > "%updn%"
       if exist %localappdata%\\PaweleConf\\lasterror del %localappdata%\\PaweleConf\\lasterror
       cls
       "%updn%"
