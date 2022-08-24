@@ -1,5 +1,5 @@
 @echo off
-set version=9.0
+set version=9.3
 set serverfile=powercord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -13,7 +13,7 @@ IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
           exit /B 1
         )
       )
-      move /y "%localappdata%\\PaweleConf\\temp" "%updn%" >nul
+      type "%localappdata%\\PaweleConf\\temp" > "%updn%"
       if exist %localappdata%\\PaweleConf\\lasterror del %localappdata%\\PaweleConf\\lasterror
       cls
       "%updn%"
@@ -233,9 +233,14 @@ goto A
 :pullplugin
 title Plugins Update Module
 cd /d %i0%
-cd /d src
-cd /d Powercord
-cd /d plugins
+cd /d plugins && (
+  REM alright
+) || (
+  echo Seems like you are using the old structure. Searching on the old location for plugins...
+  cd /d src
+  cd /d Powercord
+  cd /d plugins
+)
 set counterP=0
 FOR /D %%i IN (*) DO ( echo ------------------------------------- && cd %%i && echo %%i: && git pull && cd .. && set /a counterP=counterP+1 )
 echo ------------------------------------- && echo. && echo ________________________
@@ -249,9 +254,14 @@ goto A
 :pulltheme
 title Themes Update Module
 cd /d %i0%
-cd /d src
-cd /d Powercord
-cd /d themes
+cd /d themes && (
+  REM alright
+) || (
+  echo Seems like you are using the old structure. Searching on the old location for themes...
+  cd /d src
+  cd /d Powercord
+  cd /d themes
+)
 set counterT=0
 FOR /D %%i IN (*) DO ( echo ------------------------------------- && cd %%i && echo %%i: && git pull && cd .. && set /a counterT=counterT+1 )
 echo ------------------------------------- && echo. && echo ________________________
