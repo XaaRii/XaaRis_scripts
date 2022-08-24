@@ -1,5 +1,5 @@
 @echo off
-set version=9.3
+set version=9.4
 set serverfile=powercord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -297,11 +297,11 @@ if exist PowercordUpdate.cfg (
     for /f "eol=- delims=" %%a in (PowercordUpdate.cfg) do set "%%a"
 ) else (
     rem default config
-    echo ------------- Powercord Updater config [by Pawele] ------------- > %localappdata%\PaweleConf\PowercordUpdate.cfg && echo powercordPath=%userprofile%\powercord\ >> %localappdata%\PaweleConf\PowercordUpdate.cfg
+    echo ------------- Replugged Updater config [by Pawele] ------------- > %localappdata%\PaweleConf\PowercordUpdate.cfg && echo powercordPath=%userprofile%\replugged\ >> %localappdata%\PaweleConf\PowercordUpdate.cfg
     for /f "eol=- delims=" %%a in (PowercordUpdate.cfg) do set "%%a"
 )
 IF DEFINED powercordPath (echo powercordPath exists > NUL) ELSE (
-  echo Config file seems to be corrupted. Autorepairing... && echo. && echo powercordPath=%userprofile%\powercord\ >> PowercordUpdate.cfg
+  echo Config file seems to be corrupted. Autorepairing... && echo. && echo powercordPath=%userprofile%\replugged\ >> PowercordUpdate.cfg
   for /f "eol=- delims=" %%a in (PowercordUpdate.cfg) do set "%%a"
 )
 goto mainF
@@ -327,3 +327,5 @@ del %localappdata%\\PaweleConf\\starter.vbs > NUL
     wscript %localappdata%/PaweleConf/starter.vbs
     echo Okay, discord should be starting now. ^[You may find it hidden in the right bottom corner^]
 goto :EOF
+
+
