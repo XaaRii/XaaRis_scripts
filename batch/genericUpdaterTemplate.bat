@@ -1,5 +1,5 @@
 @echo off
-:: 3, 4, 31, 35
+:: 3, 4, 31, 35, 36
 set version=1.7
 set serverfile=UpdaterTemplate.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
@@ -33,7 +33,7 @@ if exist %localappdata%\\PaweleConf\\"%~nx0" del %localappdata%\\PaweleConf\\"%~
   goto :main
 :update
 echo Current version: %version%               Available version: %versionGenericUpdater%
-echo Latest update comment: %commentGenericUpdater%
+echo Latest update comment: %commentGenericUpdater% & echo.
 if exist %localappdata%/PaweleConf/lasterror (
   echo. & echo Warning! Last update failed with following error code: & @powershell Get-Content %localappdata%\\PaweleConf\\lasterror -Head 1 & echo.
 )
