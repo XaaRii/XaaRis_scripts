@@ -1,5 +1,5 @@
 @echo off
-set version=9.4
+set version=9.5
 set serverfile=powercord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -32,6 +32,7 @@ if exist %localappdata%\\PaweleConf\\"%~nx0" del %localappdata%\\PaweleConf\\"%~
   goto :main
 :update
 echo Current version: %version%               Available version: %versionPowercordUpdater%
+echo Latest update comment: %commentPowercordUpdater%
 if exist %localappdata%/PaweleConf/lasterror (
   echo. & echo Warning! Last update failed with following error code: & @powershell Get-Content %localappdata%\\PaweleConf\\lasterror -Head 1 & echo.
 )
@@ -116,6 +117,7 @@ echo.
 echo Other:
 echo   6 - plug replugged
 echo   7 - unplug replugged
+echo   8 - force update
 echo.
 echo   0 - exit
 echo ________________________
@@ -127,6 +129,7 @@ if "%i1%"== "3" goto pulltheme
 if "%i1%"== "4" goto pullall
 if "%i1%"== "6" ( call :plugonoff plug && goto :ppN )
 if "%i1%"== "7" ( call :plugonoff unplug && goto :ppN )
+if "%i1%"== "8" ( call :forceupdate && goto :ppN )
 if "%i1%"== "0" goto EXIT
 cls
 echo Wrong choice. Try again:
@@ -153,6 +156,12 @@ if "%i2%"== "yes" goto ppY
 if "%i2%"== "no" goto ppN
 echo Wrong choice. Try again:
 goto TWO
+
+:forceupdate
+git reset --hard HEAD && git pull
+echo Force update completed. You should restart discord for changes to apply.
+echo Do you wish to restart it now? ^(yes/no^)
+goto pnres
 
 :plugonoff
 echo Are you sure you want to %~1^? If so, press any key.
