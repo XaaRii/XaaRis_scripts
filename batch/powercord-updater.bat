@@ -32,7 +32,7 @@ if exist %localappdata%\\PaweleConf\\"%~nx0" del %localappdata%\\PaweleConf\\"%~
   goto :main
 :update
 echo Current version: %version%               Available version: %versionPowercordUpdater%
-echo Latest update comment: %commentPowercordUpdater%
+echo Latest update comment: %commentPowercordUpdater% & echo.
 if exist %localappdata%/PaweleConf/lasterror (
   echo. & echo Warning! Last update failed with following error code: & @powershell Get-Content %localappdata%\\PaweleConf\\lasterror -Head 1 & echo.
 )
