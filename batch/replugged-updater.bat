@@ -147,8 +147,9 @@ echo.
 echo Other:
 echo   5 - install replugged ^(if you haven't already^)
 echo   6 - plug replugged
-echo   7 - unplug replugged
-echo   8 - force update
+echo   7 - replug replugged
+echo   8 - unplug replugged
+echo   9 - force update
 echo.
 echo   0 - exit
 echo ________________________
@@ -160,8 +161,9 @@ if "%i1%"== "3" goto :pulltheme
 if "%i1%"== "4" goto :pullall
 if "%i1%"== "5" ( call :install && goto :ppN )
 if "%i1%"== "6" ( call :plugonoff plug && goto :ppN )
-if "%i1%"== "7" ( call :plugonoff unplug && goto :ppN )
-if "%i1%"== "8" ( call :forceupdate && goto :ppN )
+if "%i1%"== "7" ( call :plugonoff replug && goto :ppN )
+if "%i1%"== "8" ( call :plugonoff unplug && goto :ppN )
+if "%i1%"== "9" ( call :forceupdate && goto :ppN )
 if "%i1%"== "0" goto EXIT
 cls
 echo Wrong choice. Try again:
