@@ -66,10 +66,10 @@ if "%i0%"== "" set i0=%repluggedPath%
 cd /d %i0% && (
   REM alright
 ) || (
-  echo This folder doesn't seem to exist. Do you want to install it here? (yes/no)
+  echo This folder doesn't seem to exist. Do you want to install it here? ^(yes/no^)
   set z=
   set /p z="> "
-  if /i "%z%"== "yes" call install
+  if /i "%z%"== "yes" call :install
   if /i NOT "%z%"== "yes" goto ZERO
 )
 if "%blankset%"== "nah" goto Qdef
@@ -104,7 +104,7 @@ call plugonoff plug
 :EOF
 
 :dcversion
-echo Discord Stable version or Canary version^? (S / C)
+echo Discord Stable version or Canary version^? ^(S / C^)
 set /p stablecanary="> "
 if /i "%stablecanary%"== "S" goto :EOF
 if /i "%stablecanary%"== "C" goto :EOF
@@ -113,7 +113,7 @@ echo.
 goto dcversion
 
 :Qdef
-echo Would you like to save this path as default one? (yes/no)
+echo Would you like to save this path as default one? ^(yes/no^)
 set Qdefalt=
 set /p Qdefalt="> "
 if "%Qdefalt%"== "yes" goto QdefY
@@ -144,7 +144,7 @@ echo   3 - themes
 echo   4 - all
 echo.
 echo Other:
-echo   5 - install replugged (if you haven't already)
+echo   5 - install replugged ^(if you haven't already^)
 echo   6 - plug replugged
 echo   7 - unplug replugged
 echo   8 - force update
