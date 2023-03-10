@@ -50,7 +50,7 @@ IF /i NOT "%~dp0"=="%localappdata%/PaweleConf/" (
 REM ------------------ PROGRAM HERE ------------------------
 title Replugged External Updater [by Pawele]
 SETLOCAL EnableExtensions EnableDelayedExpansion
-goto settings
+goto :settings
 
 :mainF
 echo Before we start, i need to make sure where the replugged folder is located.
@@ -69,18 +69,18 @@ cd /d %i0% && (
   echo This folder doesn't seem to exist. Do you want to install it here? ^(yes/no^)
   set z=
   set /p z="> "
+  if NOT "%z%"== "yes" goto :mainF
   if /i "%z%"== "yes" call :install
-  if /i NOT "%z%"== "yes" goto ZERO
 )
-if "%blankset%"== "nah" goto Qdef
+if "%blankset%"== "nah" goto :Qdef
 if defined installdecline (
-  goto EXIT
+  goto :EXIT
 )
 if NOT defined stablecanary (
   call :dcversion
 )
 cls
-goto A
+goto :A
 
 :install
 mkdir %i0% > NUL
@@ -88,19 +88,20 @@ cd /d %i0% && (
   REM alright
 ) || (
   echo Error happened while trying to access the folder.
-  goto EXIT
+  goto :EXIT
 )
-git clone https://github.com/replugged-org/replugged . && (
-  REM altight
+git clone https://github.com/replugged-org/replugged ./gitclon/ && (
+  move ./gitclon/* .
+  rmdir gitclon /s /q
 ) || (
   echo Error while cloning repository. Do you have git installed^?
-  goto EXIT
+  goto :EXIT
 )
 call :dcversion
 call npm install -g pnpm > NUL
 call pnpm i
 call pnpm run bundle
-call plugonoff plug
+call :plugonoff plug
 :EOF
 
 :dcversion
@@ -110,23 +111,23 @@ if /i "%stablecanary%"== "S" goto :EOF
 if /i "%stablecanary%"== "C" goto :EOF
 echo Wrong choice. Try again:
 echo.
-goto dcversion
+goto :dcversion
 
 :Qdef
 echo Would you like to save this path as default one? ^(yes/no^)
 set Qdefalt=
 set /p Qdefalt="> "
-if "%Qdefalt%"== "yes" goto QdefY
-if "%Qdefalt%"== "no" goto A
+if "%Qdefalt%"== "yes" goto :QdefY
+if "%Qdefalt%"== "no" goto :A
 echo Wrong choice. Try again:
 echo.
-goto Qdef
+goto :Qdef
 
 :QdefY
 echo ------------- Replugged Updater config [by Pawele] ------------- > %localappdata%\PaweleConf\RepluggedUpdate.cfg && echo repluggedPath=%i0% >> %localappdata%\PaweleConf\RepluggedUpdate.cfg
 echo Default folder updated. Current folder: %i0%
 call :dcversion
-goto A
+goto :A
 
 :A
 cls
@@ -153,10 +154,11 @@ echo   0 - exit
 echo ________________________
 set i1=
 set /p i1="> "
-if "%i1%"== "1" goto pullpower
-if "%i1%"== "2" goto pullplugin
-if "%i1%"== "3" goto pulltheme
-if "%i1%"== "4" goto pullall
+if "%i1%"== "1" goto :pullpower
+if "%i1%"== "2" goto :pullplugin
+if "%i1%"== "3" goto :pulltheme
+if "%i1%"== "4" goto :pullall
+if "%i1%"== "5" ( call :install && goto :ppN )
 if "%i1%"== "6" ( call :plugonoff plug && goto :ppN )
 if "%i1%"== "7" ( call :plugonoff unplug && goto :ppN )
 if "%i1%"== "8" ( call :forceupdate && goto :ppN )
@@ -164,10 +166,10 @@ if "%i1%"== "0" goto EXIT
 cls
 echo Wrong choice. Try again:
 echo.
-goto Aclearless
+goto :Aclearless
 :pullall
 set i7=yes
-goto pullpower
+goto :pullpower
 
 :pullpower
 title Replugged Update Module
@@ -182,16 +184,16 @@ echo Was there an update? ^(yes/no^)
 :TWO
 set i2=
 set /p i2="> " 
-if "%i2%"== "yes" goto ppY
-if "%i2%"== "no" goto ppN
+if "%i2%"== "yes" goto :ppY
+if "%i2%"== "no" goto :ppN
 echo Wrong choice. Try again:
-goto TWO
+goto :TWO
 
 :forceupdate
 git reset --hard HEAD && git pull
 echo Force update completed. You should restart discord for changes to apply.
 echo Do you wish to restart it now? ^(yes/no^)
-goto pnres
+goto :pnres
 
 :plugonoff
 echo To %~1^ Replugged, discord must be restarted.
@@ -199,10 +201,10 @@ echo Can I restart it now? ^(yes/no^)
 :pnres
 set pnloop=
 set /p pnloop="> " 
-if "%pnloop%"== "yes" goto resyes
-if "%pnloop%"== "no" goto resno
+if "%pnloop%"== "yes" goto :resyes
+if "%pnloop%"== "no" goto :resno
 echo Wrong choice. Try again:
-goto pnres
+goto :pnres
 
 :resno
 echo Can't be helped then...
@@ -212,12 +214,12 @@ goto :EOF
 :resyes
 if /i "%stablecanary%"== "C" (for /f "skip=1 tokens=* delims=" %%# in ('wmic process where "name='DiscordCanary.exe'" get ExecutablePath') do (
   set "pcpath=%%#"
-  goto resyesnext
+  goto :resyesnext
 )
 )
 if /i "%stablecanary%"== "S" (for /f "skip=1 tokens=* delims=" %%# in ('wmic process where "name='Discord.exe'" get ExecutablePath') do (
   set "pcpath=%%#"
-  goto resyesnext
+  goto :resyesnext
 )
 )
 :resyesnext
@@ -238,12 +240,12 @@ goto :EOF
 echo.
 if /i "%stablecanary%"== "C" (for /f "skip=1 tokens=* delims=" %%# in ('wmic process where "name='DiscordCanary.exe'" get ExecutablePath') do (
   set "pcpath=%%#"
-  goto rest
+  goto :rest
 )
 )
 if /i "%stablecanary%"== "S" (for /f "skip=1 tokens=* delims=" %%# in ('wmic process where "name='Discord.exe'" get ExecutablePath') do (
   set "pcpath=%%#"
-  goto rest
+  goto :rest
 )
 )
 :rest
@@ -265,21 +267,21 @@ echo.
 break
 if /i "%stablecanary%"== "C" echo Replugged successfully injected into Discord Canary.
 if /i "%stablecanary%"== "S" echo Replugged successfully injected into Discord Stable.
-if "%i7%"=="yes" goto pullplugin
+if "%i7%"=="yes" goto :pullplugin
 if "%runs%"=="0" echo Discord wasn't running before, so i can't start it up now.
 if "%runs%"=="1" CALL :repluggedStartagain
 echo Press any key to continue to main screen.
 title Finished.
 pause > nul
 cls
-goto A
+goto :A
 
 :pullplugin
 title Plugins Update Module
 echo Sorry, this function is currently not supported.
 echo Press any key to return...
 pause > NUL
-goto A
+goto :A
 
 cd /d %i0%
 cd /d plugins && (
@@ -293,19 +295,19 @@ cd /d plugins && (
 set counterP=0
 FOR /D %%i IN (*) DO ( echo ------------------------------------- && cd %%i && echo %%i: && git pull && cd .. && set /a counterP=counterP+1 )
 echo ------------------------------------- && echo. && echo ________________________
-if "%i7%"=="yes" echo Successfully updated all %counterP% plugins. && goto pulltheme
+if "%i7%"=="yes" echo Successfully updated all %counterP% plugins. && goto :pulltheme
 echo Successfully updated all %counterP% plugins. Press any key to continue to main screen.
 title Finished.
 pause > nul
 cls
-goto A
+goto :A
 
 :pulltheme
 title Themes Update Module
 echo Sorry, this function is currently not supported.
 echo Press any key to return...
 pause > NUL
-goto A
+goto :A
 
 cd /d %i0%
 cd /d themes && (
@@ -323,21 +325,21 @@ if "%i7%"=="yes" (
   echo Successfully updated all %counterT% themes.
   if "%runs%"=="0" echo Discord wasn't running before, so no need to start it up now.
   if "%runs%"=="1" CALL :repluggedStartagain
-  goto EXIT
+  goto :EXIT
 )
 echo Successfully updated all %counterT% themes. Press any key to continue to main screen.
 title Finished.
 pause > nul
 cls
-goto A
+goto :A
 
 :ppN
-if "%i7%"=="yes" goto pullplugin
+if "%i7%"=="yes" goto :pullplugin
 echo.
 echo Returning to main menu...
 title Finished.
 timeout 4 > nul
-goto A
+goto :A
 
 :settings
 cd /d %localappdata%\
@@ -358,7 +360,7 @@ IF DEFINED repluggedPath (echo repluggedPath exists > NUL) ELSE (
   echo Config file seems to be corrupted. Autorepairing... && echo. && echo repluggedPath=%userprofile%\replugged\ >> RepluggedUpdate.cfg
   for /f "eol=- delims=" %%a in (RepluggedUpdate.cfg) do set "%%a"
 )
-goto mainF
+goto :mainF
 
 :EXIT
 echo.
