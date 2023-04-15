@@ -160,6 +160,7 @@ IF /i NOT "%~dp0"=="%localappdata%/PaweleConf/" (
 :build
   call pnpm build
   echo.
+  echo All that's left now is to restart Discord ^(Ctrl + R^).
   echo Done^! ^(Press any key to return to the main menu.^)
   pause > NUL
   cls
