@@ -1,7 +1,7 @@
 @if (@a==@b) @end /*
 :: Batch sector
 @echo off
-set version=1.0
+set version=1.1
 set serverfile=vencord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -61,7 +61,9 @@ ENDLOCAL
   ) else (
     call :noPath
   )
-  dir /b %vencordPath% > NUL && (
+
+  FOR /F "tokens=* USEBACKQ" %%g IN (`dir /b %vencordPath%`) do (SET "output=%%g")
+  if not "%output%" == "" (
     :: Folder is NOT empty
     IF EXIST "package.json" (
       FOR /F "tokens=*" %%g IN ('powershell -Nop -C "(Get-Content .\package.json|ConvertFrom-Json).name"') do (
@@ -70,15 +72,21 @@ ENDLOCAL
     ) ELSE (
       goto :mismatch
     )
-  ) || (
-    :: Folder empty
-    echo Selected folder ^(%vencordPath%^) is empty.
-    choice /C yn /N /M "Would you like to install Vencord here? (press Y or N)"
-    if "%errorlevel%"=="1" goto :install
-    if "%errorlevel%"=="2" ( echo Alright. && goto :exit )
+  ) else (
+    goto :emptyF
   )
   goto :EOF
 
+:emptyF
+  :: Folder empty
+  echo Selected folder ^(%vencordPath%^) is empty.
+  choice /C yn /N /M "Would you like to install Vencord here? (press Y or N)"
+  if "%errorlevel%"=="1" goto :install
+  if "%errorlevel%"=="2" (
+    echo Alright.
+    del %localappdata%\\PaweleConf\\VencordUpdater.cfg
+    goto :exit
+  )
 
 :noPath
   echo Before we start, i need to know where your Vencord folder is located.
@@ -89,7 +97,10 @@ ENDLOCAL
     cd /d "%%I" || ( echo [93mERROR:[0m I've couldn't access the folder. && goto :exit )
     goto :EOF
   )
-  if not defined vencordPath ( echo [93mERROR:[0m It seems you didn't pick a folder. && goto :exit )
+  if not defined vencordPath (
+    echo [93mERROR:[0m It seems you didn't pick a folder.
+    exit 0
+  )
 
 
 :mismatch
@@ -97,6 +108,7 @@ ENDLOCAL
   echo   Please double check it and try it again.
   echo   You can also delete the folder completely and create it again.
   echo   Although that will remove QuickCss and settings, so make sure you have those backed up ^(you can find them in the 'settings' folder^)
+  del %localappdata%\\PaweleConf\\VencordUpdater.cfg
   goto :exit
 
 
@@ -207,7 +219,10 @@ ENDLOCAL
   )
   :: Install process
   git clone https://github.com/Vendicated/Vencord ./gitclon/ && (
-    move ./gitclon/* .
+    cd gitclon
+    robocopy . .. /MOVE /E > NUL
+    cd ..
+    timeout 1 > NUL
     rmdir gitclon /s /q
   ) || (
     echo [93mERROR:[0m Failed while cloning repository. Do you have git installed^?
@@ -215,10 +230,12 @@ ENDLOCAL
   )
   mkdir .\\src\\userplugins
   echo.
-  CHOICE /C yn /N /M "Do you want to install Global badges plugin as well?"
+  CHOICE /C yn /N /M "Do you want to install Global badges plugin as well? (Y/N)"
   if "%errorlevel%"=="1" (
-    curl https://raw.githubusercontent.com/HypedDomi/Vencord-Plugins/main/GlobalBadges/globalBadges.tsx > .\\src\\userplugins\\globalBadges.tsx
+    curl -s https://raw.githubusercontent.com/HypedDomi/Vencord-Plugins/main/GlobalBadges/globalBadges.tsx > .\\src\\userplugins\\globalBadges.tsx
   )
+  echo Global badges installed, don't forget to turn it on^!
+  timeout 2 > NUL
   call pnpm install --frozen-lockfile || (
     echo [93mWARN:[0m Failed while installing node_modules. Check the error to understand more.
     goto :EXIT
@@ -251,7 +268,7 @@ ENDLOCAL
   echo Exiting... ^(press any key to close^)
   title Have a great day^!
   pause > nul
-  exit /b 0
+  exit 0
 
 
 :: JScript sector */
