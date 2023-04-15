@@ -47,5 +47,6 @@ IF /i NOT "%~dp0"=="%localappdata%/PaweleConf/" (
   %localappdata%/PaweleConf/"%~nx0" update
   goto :EOF
 )
+ENDLOCAL
 :main
 REM ------------------ PROGRAM HERE ------------------------
