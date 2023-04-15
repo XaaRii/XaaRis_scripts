@@ -48,6 +48,7 @@ IF /i NOT "%~dp0"=="%localappdata%/PaweleConf/" (
   %localappdata%/PaweleConf/"%~nx0" update
   goto :EOF
 )
+ENDLOCAL
 :main
   REM ------------------ PROGRAM HERE ------------------------
   goto :settings
@@ -60,44 +61,42 @@ IF /i NOT "%~dp0"=="%localappdata%/PaweleConf/" (
   ) else (
     call :noPath
   )
-  if not defined vencordPath ( echo [93mERROR:[0m It seems you didn't pick a folder. && goto :exit )
-  
-  :: empty folder check
-  dir /b /s /a "%%I" | findstr .>nul && (
+  dir /b %vencordPath% > NUL && (
     :: Folder is NOT empty
     IF EXIST "package.json" (
       FOR /F "tokens=*" %%g IN ('powershell -Nop -C "(Get-Content .\package.json|ConvertFrom-Json).name"') do (
-          SET pkgname=%%g
-          if "%pkgname%"== "vencord" ( goto :menu ) || ( goto :mismatch )
+          if %%g == vencord ( goto :menu ) else ( goto :mismatch )
         )
     ) ELSE (
       goto :mismatch
     )
   ) || (
     :: Folder empty
-    echo Selected folder (%vencordPath%) is empty.
+    echo Selected folder ^(%vencordPath%^) is empty.
     choice /C yn /N /M "Would you like to install Vencord here? (press Y or N)"
     if "%errorlevel%"=="1" goto :install
-    if "%errorlevel%"=="2" ( echo Alright. && goto :exit)
+    if "%errorlevel%"=="2" ( echo Alright. && goto :exit )
   )
+  goto :EOF
 
 
 :noPath
   echo Before we start, i need to know where your Vencord folder is located.
   echo If you don't have one yet, create a new one instead.
   for /f "delims=" %%I in ('cscript /nologo /e:jscript "%~f0"') do (
-    echo You chose %%I
+    set vencordPath=%%I
     echo vencordPath=%%I >> VencordUpdater.cfg
     cd /d "%%I" || ( echo [93mERROR:[0m I've couldn't access the folder. && goto :exit )
     goto :EOF
   )
+  if not defined vencordPath ( echo [93mERROR:[0m It seems you didn't pick a folder. && goto :exit )
 
 
 :mismatch
   echo [93mERROR:[0m The folder doesn't seem to be a Vencord folder.
-  echo Please double check it and try it again.
-  echo You can also delete the folder completely and create it again.
-  echo Although that will remove QuickCss and settings, so make sure you have those backed up ^(you can find them in the 'settings' folder^)
+  echo   Please double check it and try it again.
+  echo   You can also delete the folder completely and create it again.
+  echo   Although that will remove QuickCss and settings, so make sure you have those backed up ^(you can find them in the 'settings' folder^)
   goto :exit
 
 
@@ -152,7 +151,7 @@ IF /i NOT "%~dp0"=="%localappdata%/PaweleConf/" (
   goto :menu
 
 :injector
-  start /b call pnpm inject
+  start /b cmd /C "pnpm inject"
   timeout 6 > NUL
   cls
   goto :menu
@@ -226,7 +225,7 @@ IF /i NOT "%~dp0"=="%localappdata%/PaweleConf/" (
   )
 
   call pnpm build
-  start /b call pnpm inject
+  start /b cmd /C "pnpm inject"
   timeout 6 > NUL
   cls
   goto :menu
@@ -234,13 +233,12 @@ IF /i NOT "%~dp0"=="%localappdata%/PaweleConf/" (
 
 :settings
   title Vencord External Updater [by Pawele]
-  SETLOCAL EnableExtensions EnableDelayedExpansion
   cd /d %localappdata%\
   cd /d PaweleConf 2> NUL || (
     md PaweleConf
     cd /d PaweleConf
   )
-  if exist VencordUpdate.cfg (
+  if exist VencordUpdater.cfg (
     for /f "eol=- delims=" %%a in (VencordUpdater.cfg) do set "%%a"
   ) else (
     echo ------------- Vencord Updater config ------------- > %localappdata%\PaweleConf\VencordUpdater.cfg
@@ -250,10 +248,10 @@ IF /i NOT "%~dp0"=="%localappdata%/PaweleConf/" (
 
 :exit
   echo.
-  echo Exiting... ^(press any key to continue^)
+  echo Exiting... ^(press any key to close^)
   title Have a great day^!
   pause > nul
-  exit
+  exit /b 0
 
 
 :: JScript sector */
