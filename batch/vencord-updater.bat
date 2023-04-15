@@ -254,3 +254,9 @@ IF /i NOT "%~dp0"=="%localappdata%/PaweleConf/" (
   title Have a great day^!
   pause > nul
   exit
+
+
+:: JScript sector */
+var shl = new ActiveXObject("Shell.Application");
+var folder = shl.BrowseForFolder(0, "Please choose a folder where you have or want to have Vencord installed.", 0, 0x00);
+WSH.Echo(folder ? folder.self.path : '');
