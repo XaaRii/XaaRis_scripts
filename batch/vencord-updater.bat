@@ -1,7 +1,7 @@
 @if (@a==@b) @end /*
 :: Batch sector
 @echo off
-set version=1.1
+set version=1.2
 set serverfile=vencord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -114,22 +114,24 @@ ENDLOCAL
 
 :menu
   title Vencord External Updater [by Pawele]
-  echo ___________________________
+  echo _____________________________
   echo  What do you want to do?:
   echo    1 - update Vencord
   echo    2 - force update
   echo    3 - open injector window
+  echo    4 - 3rd party plugin menu
   echo.
   echo    5 - build
   echo    6 - autobuild on changes
   echo.
   echo    0 - exit
-  echo ___________________________
+  echo _____________________________
   set i1=
   set /p i1="> "
   if "%i1%"== "1" goto :update
   if "%i1%"== "2" goto :forceUpdate
   if "%i1%"== "3" goto :injector
+  if "%i1%"== "4" ( cls && goto :3rdPartyMenu )
   if "%i1%"== "5" goto :build
   if "%i1%"== "6" goto :watch
   if "%i1%"== "0" goto :exit
@@ -137,6 +139,34 @@ ENDLOCAL
   echo Wrong choice. Try again:
   goto :menu
 
+:3rdPartyMenu
+  echo ____________________________________
+  echo  3rd party plugin menu:
+  echo    1 - install/update Global badges
+  echo.
+  echo.
+  echo.
+  echo    0 - go back
+  echo ____________________________________
+  set i1=
+  set /p i1="> "
+  if "%i1%"== "1" goto :gloBad
+  if "%i1%"== "0" goto :menu
+  cls
+  echo Wrong choice. Try again:
+  goto :3rdPartyMenu
+
+:gloBad
+  echo downloading Global badges...
+  curl -s https://raw.githubusercontent.com/HypedDomi/Vencord-Plugins/main/GlobalBadges/globalBadges.tsx > .\\src\\userplugins\\globalBadges.tsx
+  echo rebuilding Vencord...
+  call pnpm build > NUL
+  echo.
+  echo All that's left now is to restart Discord ^(Ctrl + R^).
+  echo Don't forget to turn it on^! ^(Press any key to return.^)
+  pause > NUL
+  cls
+  goto :3rdPartyMenu
 
 :update
   call git pull
@@ -149,13 +179,11 @@ ENDLOCAL
 :forceUpdate
   :: Userfiles backup
   robocopy ".\\src\\userplugins" "%localappdata%\\PaweleConf\\backup\\src\\userplugins" /MIR /E > NUL
-  robocopy ".\\settings" "%localappdata%\\PaweleConf\\backup\\settings" /MIR /E > NUL
   
   call git reset --hard
   call git pull
 
   robocopy "%localappdata%\\PaweleConf\\backup\\src\\userplugins" ".\\src\\userplugins" /MOVE /E > NUL
-  robocopy "%localappdata%\\PaweleConf\\backup\\settings" ".\\settings" /MOVE /E > NUL
   echo.
   echo Done^! ^(Press any key to return to the main menu.^)
   pause > NUL
