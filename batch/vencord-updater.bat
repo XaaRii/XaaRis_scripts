@@ -1,7 +1,7 @@
 @if (@a==@b) @end /*
 :: Batch sector
 @echo off
-set version=1.2
+set version=1.3
 set serverfile=vencord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -215,6 +215,15 @@ ENDLOCAL
 
 
 :install
+  echo  Notice: To install Vencord, you need the following:
+  echo  - installed node.js ^(at least LTS version^) - https://nodejs.org/
+  echo  - installed git - https://git-scm.com/downloads
+  echo  - installed pnpm ^(will install automatically but requires restart of this script^)
+  echo.
+  echo  Ensure you have node.js and git installed, it will save you quite some time
+  echo  ^(Press any key to continue.^)
+  pause > NUL
+
   :: NODE.JS check
   call node --version > NUL || (
     echo [93mERROR:[0m It seems you don't have node.js installed.
@@ -233,7 +242,8 @@ ENDLOCAL
   call pnpm --version > NUL || (
     echo [93mWARN:[0m It seems you don't have pnpm installed. Installing now...
     call npm i -g pnpm
-    echo Done. For changes to apply, you need to start this script again.
+    echo.
+    echo pnpm installed. Please close and open this script again to continue.
     goto :exit
   )
   FOR /F "tokens=*" %%g IN ('call pnpm --version') do ( set pnpmVer=%%g )
@@ -242,7 +252,8 @@ ENDLOCAL
   if not %pnpmVer% geq 8 (
     echo [93mERROR:[0m It seems you don't have the minimal required version of pnpm ^(8^) installed. Installing now...
     call npm i -g pnpm
-    echo Done. For changes to apply, you need to start this script again.
+    echo.
+    echo pnpm installed. Please close and open this script again to continue.
     goto :exit
   )
   :: Install process
