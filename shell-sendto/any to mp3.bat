@@ -1,8 +1,9 @@
 @echo OFF
 cd /d %~dp1 || (
-  echo This script is not supposed to be run like this.
-  echo Either drag and drop another file on this batch file
-  echo or run this script from the 'Send to' menu.
+  echo.
+  echo   This script is not supposed to be run like this.
+  echo   Either drag and drop another file on this batch file
+  echo   or run this script from the 'Send to' menu.
   timeout 5 > NUL
   goto :loopend
 )
