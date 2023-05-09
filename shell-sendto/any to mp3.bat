@@ -1,5 +1,5 @@
 @echo OFF
-cd /d %~dp1 || (
+cd /d %~dp1 2>NUL || (
   echo.
   echo   This script is not supposed to be run like this.
   echo   Either drag and drop another file on this batch file
@@ -9,25 +9,31 @@ cd /d %~dp1 || (
 )
 
 :wait
-IF EXIST %temp%\wait-ffmpeg (
-  timeout 3
-  goto :wait
-)
+  IF EXIST %temp%\wait-ffmpeg (
+    timeout 3
+    goto :wait
+  )
 
-IF EXIST %userprofile%\Downloads\ffmpeg.exe (
-	SET "PATH=%PATH%;%userprofile%\Downloads"
-) else IF EXIST %~dp0\ffmpeg.exe (
-	SET "PATH=%PATH%;%~dp0"
-) else IF EXIST %~dp1\ffmpeg.exe (
-	SET "PATH=%PATH%;%~dp1"
-) else IF EXIST %temp%\ffmpeg.exe (
-	SET "PATH=%PATH%;%temp%"
-) else (
-  call :noffmpeg
+call ffmpeg -version 2> NUL > NUL || (
+  goto :ffcheck
 )
+goto :main
 
+:ffcheck
+  IF EXIST %userprofile%\Downloads\ffmpeg.exe (
+  	SET "PATH=%PATH%;%userprofile%\Downloads"
+  ) else IF EXIST %~dp0\ffmpeg.exe (
+  	SET "PATH=%PATH%;%~dp0"
+  ) else IF EXIST %~dp1\ffmpeg.exe (
+  	SET "PATH=%PATH%;%~dp1"
+  ) else IF EXIST %temp%\ffmpeg.exe (
+  	SET "PATH=%PATH%;%temp%"
+  ) else (
+    call :noffmpeg
+  )
+
+:main
 echo %~dp1
-
 SETLOCAL enableextensions disabledelayedexpansion
 
 :loopfor
