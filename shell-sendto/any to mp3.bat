@@ -10,7 +10,7 @@ cd /d %~dp1 2>NUL || (
 
 :wait
   IF EXIST %temp%\wait-ffmpeg (
-    timeout 3
+    timeout 3 > NUL
     goto :wait
   )
 
