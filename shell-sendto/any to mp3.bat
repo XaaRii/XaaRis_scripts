@@ -39,7 +39,7 @@ SETLOCAL enableextensions disabledelayedexpansion
 :loopfor
   if "%~1"=="" goto :loopend
   echo [1mCreating a "%~n1-sound.mp3" file[0m
-  ffmpeg -i "%~1" -q:a 0 -map a "%~n1-sound.mp3"
+  ffmpeg -v quiet -stats -i "%~1" -q:a 0 -map a "%~n1-sound.mp3"
   SHIFT
   goto :loopfor
 
