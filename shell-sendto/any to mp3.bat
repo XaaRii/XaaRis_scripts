@@ -38,7 +38,7 @@ SETLOCAL enableextensions disabledelayedexpansion
 
 :loopfor
   if "%~1"=="" goto :loopend
-  echo Creating a '%~n1-sound.mp3' file
+  echo [1mCreating a "%~n1-sound.mp3" file[0m
   ffmpeg -i "%~1" -q:a 0 -map a "%~n1-sound.mp3"
   SHIFT
   goto :loopfor
@@ -52,7 +52,7 @@ SETLOCAL enableextensions disabledelayedexpansion
   exit 0
 
 :noffmpeg
-  echo ffmpeg.exe not found. Downloading it now...
+  echo [33mffmpeg.exe not found. Downloading it now...[0m
   echo.
   cd /d %temp%
   echo Wait > wait-ffmpeg
@@ -69,7 +69,7 @@ SETLOCAL enableextensions disabledelayedexpansion
 
 :failffmpeg
   del wait-ffmpeg
-  echo ...I couldn't download ffmpeg. That can happen if this script is outdated.
+  echo [31m...I couldn't download ffmpeg. That can happen if this script is outdated.[0m
   echo Please check if there is a new version of this script:
   echo https://github.com/XaaRii/XaaRis_scripts/tree/main/shell-sendto
   echo.
