@@ -1,7 +1,7 @@
 @if (@a==@b) @end /*
 :: Batch sector
-@echo off
-set version=1.4
+@echo on
+set version=1.4.1
 set serverfile=vencord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -172,11 +172,11 @@ ENDLOCAL
 :spoEmb
   echo downloading Spotimbed (Spotify embed fix)
 
-  mkdir userplugins/spotimbed/ 2> NUL || (
-    rmdir .\\userplugins\\spotimbed /s /q
-    mkdir userplugins/spotimbed
+  mkdir .\\src\\userplugins\\spotimbed 2> NUL || (
+    rmdir .\\src\\userplugins\\spotimbed /s /q 2>NUL
+    mkdir .\\src\\userplugins\\spotimbed
   )
-  git clone https://codeberg.org/vap/vc-spotimbed ./userplugins/spotimbed/ || (
+  git clone https://codeberg.org/vap/vc-spotimbed ./src/userplugins/spotimbed/ || (
     echo [93mERROR:[0m Failed while cloning repository. Report this to Pawele, he'll look into it.
     goto :EXIT
   )
@@ -301,11 +301,11 @@ ENDLOCAL
   echo.
   CHOICE /C yn /N /M "Do you want to install Spotify embed fix plugin as well? (Y/N)"
   if "%errorlevel%"=="1" (
-    mkdir userplugins/spotimbed/ 2> NUL || (
-      rmdir .\\userplugins\\spotimbed /s /q
-      mkdir userplugins/spotimbed
+    mkdir .\\src\\userplugins\\spotimbed\\ 2> NUL || (
+      rmdir .\\src\\userplugins\\spotimbed /s /q
+      mkdir .\\src\\userplugins\\spotimbed
     )
-    git clone https://codeberg.org/vap/vc-spotimbed ./userplugins/spotimbed/ || (
+    git clone https://codeberg.org/vap/vc-spotimbed .src//userplugins/spotimbed/ || (
       echo [93mERROR:[0m Failed while cloning repository. Do you have git installed^?
       goto :EXIT
     )
