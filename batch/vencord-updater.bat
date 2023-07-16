@@ -1,6 +1,6 @@
 @if (@a==@b) @end /*
 :: Batch sector
-@echo on
+@echo off
 set version=1.4.1
 set serverfile=vencord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
