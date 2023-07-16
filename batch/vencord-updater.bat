@@ -1,7 +1,7 @@
 @if (@a==@b) @end /*
 :: Batch sector
 @echo off
-set version=1.3
+set version=1.4
 set serverfile=vencord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -143,7 +143,7 @@ ENDLOCAL
   echo ____________________________________
   echo  3rd party plugin menu:
   echo    1 - install/update Global badges
-  echo.
+  echo.   2 - install/update Spotimbed (Spotify embed fix)
   echo.
   echo.
   echo    0 - go back
@@ -151,6 +151,7 @@ ENDLOCAL
   set i1=
   set /p i1="> "
   if "%i1%"== "1" goto :gloBad
+  if "%i1%"== "2" goto :spoEmb
   if "%i1%"== "0" goto :menu
   cls
   echo Wrong choice. Try again:
@@ -163,7 +164,28 @@ ENDLOCAL
   call pnpm build > NUL
   echo.
   echo All that's left now is to restart Discord ^(Ctrl + R^).
-  echo Don't forget to turn it on^! ^(Press any key to return.^)
+  echo Don't forget to turn it on in Plugins tab^! ^(Press any key to return.^)
+  pause > NUL
+  cls
+  goto :3rdPartyMenu
+
+:spoEmb
+  echo downloading Spotimbed (Spotify embed fix)
+
+  mkdir userplugins/spotimbed/ 2> NUL || (
+    rmdir .\\userplugins\\spotimbed /s /q
+    mkdir userplugins/spotimbed
+  )
+  git clone https://codeberg.org/vap/vc-spotimbed ./userplugins/spotimbed/ || (
+    echo [93mERROR:[0m Failed while cloning repository. Report this to Pawele, he'll look into it.
+    goto :EXIT
+  )
+
+  echo rebuilding Vencord...
+  call pnpm build > NUL
+  echo.
+  echo All that's left now is to restart Discord ^(Ctrl + R^).
+  echo Don't forget to turn it on in Plugins tab^! ^(Press any key to return.^)
   pause > NUL
   cls
   goto :3rdPartyMenu
@@ -273,7 +295,22 @@ ENDLOCAL
   if "%errorlevel%"=="1" (
     curl -s https://raw.githubusercontent.com/HypedDomi/Vencord-Plugins/main/GlobalBadges/globalBadges.tsx > .\\src\\userplugins\\globalBadges.tsx
   )
-  echo Global badges installed, don't forget to turn it on^!
+  echo Global badges installed, don't forget to turn it on in Plugins tab^!
+  timeout 2 > NUL
+
+  echo.
+  CHOICE /C yn /N /M "Do you want to install Spotify embed fix plugin as well? (Y/N)"
+  if "%errorlevel%"=="1" (
+    mkdir userplugins/spotimbed/ 2> NUL || (
+      rmdir .\\userplugins\\spotimbed /s /q
+      mkdir userplugins/spotimbed
+    )
+    git clone https://codeberg.org/vap/vc-spotimbed ./userplugins/spotimbed/ || (
+      echo [93mERROR:[0m Failed while cloning repository. Do you have git installed^?
+      goto :EXIT
+    )
+  )
+  echo Spotimbed installed, don't forget to turn it on in Plugins tab^!
   timeout 2 > NUL
   call pnpm install --frozen-lockfile || (
     echo [93mWARN:[0m Failed while installing node_modules. Check the error to understand more.
