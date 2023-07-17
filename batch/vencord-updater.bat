@@ -1,7 +1,7 @@
 @if (@a==@b) @end /*
 :: Batch sector
 @echo off
-set version=1.4.1
+set version=1.5
 set serverfile=vencord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -143,8 +143,8 @@ ENDLOCAL
   echo ____________________________________
   echo  3rd party plugin menu:
   echo    1 - install/update Global badges
-  echo.   2 - install/update Spotimbed (Spotify embed fix)
-  echo.
+  echo    2 - install/update Spotimbed (Spotify embed fix)
+  echo    3 - install/update Gif Collection
   echo.
   echo    0 - go back
   echo ____________________________________
@@ -152,6 +152,7 @@ ENDLOCAL
   set /p i1="> "
   if "%i1%"== "1" goto :gloBad
   if "%i1%"== "2" goto :spoEmb
+  if "%i1%"== "3" goto :gifCol
   if "%i1%"== "0" goto :menu
   cls
   echo Wrong choice. Try again:
@@ -177,6 +178,27 @@ ENDLOCAL
     mkdir .\\src\\userplugins\\spotimbed
   )
   git clone https://codeberg.org/vap/vc-spotimbed ./src/userplugins/spotimbed/ || (
+    echo [93mERROR:[0m Failed while cloning repository. Report this to Pawele, he'll look into it.
+    goto :EXIT
+  )
+
+  echo rebuilding Vencord...
+  call pnpm build > NUL
+  echo.
+  echo All that's left now is to restart Discord ^(Ctrl + R^).
+  echo Don't forget to turn it on in Plugins tab^! ^(Press any key to return.^)
+  pause > NUL
+  cls
+  goto :3rdPartyMenu
+
+:gifCol
+  echo downloading Gif Collection plugin
+
+  mkdir .\\src\\userplugins\\vc-gif-collections 2> NUL || (
+    rmdir .\\src\\userplugins\\vc-gif-collections /s /q 2>NUL
+    mkdir .\\src\\userplugins\\vc-gif-collections
+  )
+  git clone https://github.com/Syncxv/vc-gif-collections ./src/userplugins/vc-gif-collections/ || (
     echo [93mERROR:[0m Failed while cloning repository. Report this to Pawele, he'll look into it.
     goto :EXIT
   )
@@ -312,6 +334,22 @@ ENDLOCAL
   )
   echo Spotimbed installed, don't forget to turn it on in Plugins tab^!
   timeout 2 > NUL
+
+  echo.
+  CHOICE /C yn /N /M "Do you want to install Gif Collection plugin as well? (Y/N)"
+  if "%errorlevel%"=="1" (
+    mkdir .\\src\\userplugins\\vc-gif-collections\\ 2> NUL || (
+      rmdir .\\src\\userplugins\\vc-gif-collections /s /q
+      mkdir .\\src\\userplugins\\vc-gif-collections
+    )
+    git clone https://github.com/Syncxv/vc-gif-collections .src//userplugins/vc-gif-collections/ || (
+      echo [93mERROR:[0m Failed while cloning repository. Do you have git installed^?
+      goto :EXIT
+    )
+  )
+  echo Gif Collection plugin installed, don't forget to turn it on in Plugins tab^!
+  timeout 2 > NUL
+  
   call pnpm install --frozen-lockfile || (
     echo [93mWARN:[0m Failed while installing node_modules. Check the error to understand more.
     goto :EXIT
