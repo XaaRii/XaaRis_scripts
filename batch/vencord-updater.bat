@@ -1,7 +1,7 @@
 @if (@a==@b) @end /*
 :: Batch sector
 @echo off
-set version=1.5
+set version=2.0
 set serverfile=vencord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -26,29 +26,28 @@ IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
 title Update check && echo Checking for updates...
 if NOT exist %localappdata%\\PaweleConf\\ mkdir %localappdata%\\PaweleConf\\
 if exist %localappdata%\\PaweleConf\\"%~nx0" del %localappdata%\\PaweleConf\\"%~nx0"
-@powershell Invoke-WebRequest -Uri https://raw.githubusercontent.com/XaaRii/XaaRis_scripts/main/versions.ini -OutFile "%localappdata%/PaweleConf/versions.ini"
-  for /f "delims=" %%x in (%localappdata%/PaweleConf/versions.ini) do %%x 2>NUL
-  cls
-  IF %version% NEQ %versionVencordUpdater% call :update
-  title  
-  goto :main
+curl -L https://raw.githubusercontent.com/XaaRii/XaaRis_scripts/main/versions.ini -o "%localappdata%/PaweleConf/versions.ini" 2> NUL
+for /f "delims=" %%x in (%localappdata%/PaweleConf/versions.ini) do %%x 2>NUL
+cls
+IF %version% NEQ %versionVencordUpdater% call :update
+goto :main
 :update
-echo Current version: %version%               Available version: %versionVencordUpdater%
-echo Latest update comment: %commentVencordUpdater% & echo.
-if exist %localappdata%/PaweleConf/lasterror (
-  echo. & echo Warning! Last update failed with following error code: & @powershell Get-Content %localappdata%\\PaweleConf\\lasterror -Head 1 & echo.
-)
-CHOICE /C yn /N /M "Do you want to update? (press Y or N)"
-if "%errorlevel%"=="1" echo Updating...
-if "%errorlevel%"=="2" cls & goto :EOF
-SETLOCAL
-IF /i NOT "%~dp0"=="%localappdata%/PaweleConf/" (
-  set updn=%~dpnx0
-  COPY /y "%~dpnx0" "%localappdata%/PaweleConf/%~nx0" >nul
-  %localappdata%/PaweleConf/"%~nx0" update
-  goto :EOF
-)
-ENDLOCAL
+  echo Current version: %version%               Available version: %versionVencordUpdater%
+  echo Latest update comment: %commentVencordUpdater% & echo.
+  if exist %localappdata%/PaweleConf/lasterror (
+    echo. & echo Warning! Last update failed with following error code: & @powershell Get-Content %localappdata%\\PaweleConf\\lasterror -Head 1 & echo.
+  )
+  CHOICE /C yn /N /M "Do you want to update? (press Y or N)"
+  if "%errorlevel%"=="1" echo Updating...
+  if "%errorlevel%"=="2" cls & goto :EOF
+  SETLOCAL
+    IF /i NOT "%~dp0"=="%localappdata%/PaweleConf/" (
+      set updn=%~dpnx0
+      COPY /y "%~dpnx0" "%localappdata%/PaweleConf/%~nx0" >nul
+      %localappdata%/PaweleConf/"%~nx0" update
+      goto :EOF
+    )
+  ENDLOCAL
 :main
   REM ------------------ PROGRAM HERE ------------------------
   goto :settings
@@ -140,12 +139,15 @@ ENDLOCAL
   goto :menu
 
 :3rdPartyMenu
+  title Vencord External Updater [by Pawele]: Third party plugin menu
   echo ____________________________________
   echo  3rd party plugin menu:
   echo    1 - install/update Global badges
   echo    2 - install/update Spotimbed (Spotify embed fix)
   echo    3 - install/update Gif Collection
   echo.
+  echo.
+  echo    9 - install/update all
   echo    0 - go back
   echo ____________________________________
   set i1=
@@ -153,26 +155,28 @@ ENDLOCAL
   if "%i1%"== "1" goto :gloBad
   if "%i1%"== "2" goto :spoEmb
   if "%i1%"== "3" goto :gifCol
+  if "%i1%"== "9" call :gloBad "everything"
   if "%i1%"== "0" goto :menu
   cls
   echo Wrong choice. Try again:
   goto :3rdPartyMenu
 
-:gloBad
+:gloBad <everything>
   echo downloading Global badges...
   curl -s https://raw.githubusercontent.com/HypedDomi/Vencord-Plugins/main/GlobalBadges/globalBadges.tsx > .\\src\\userplugins\\globalBadges.tsx
-  echo rebuilding Vencord...
-  call pnpm build > NUL
-  echo.
-  echo All that's left now is to restart Discord ^(Ctrl + R^).
-  echo Don't forget to turn it on in Plugins tab^! ^(Press any key to return.^)
-  pause > NUL
-  cls
-  goto :3rdPartyMenu
+  if not "%~1"== "everything" (
+    echo rebuilding Vencord...
+    call pnpm build > NUL
+    echo.
+    echo All that's left now is to restart Discord ^(Ctrl + R^).
+    echo Don't forget to turn it on in Plugins tab^! ^(Press any key to return.^)
+    pause > NUL
+    cls
+    goto :3rdPartyMenu
+  )
 
 :spoEmb
   echo downloading Spotimbed (Spotify embed fix)
-
   mkdir .\\src\\userplugins\\spotimbed 2> NUL || (
     rmdir .\\src\\userplugins\\spotimbed /s /q 2>NUL
     mkdir .\\src\\userplugins\\spotimbed
@@ -182,18 +186,19 @@ ENDLOCAL
     goto :EXIT
   )
 
-  echo rebuilding Vencord...
-  call pnpm build > NUL
-  echo.
-  echo All that's left now is to restart Discord ^(Ctrl + R^).
-  echo Don't forget to turn it on in Plugins tab^! ^(Press any key to return.^)
-  pause > NUL
-  cls
-  goto :3rdPartyMenu
+  if not "%~1"== "everything" (
+    echo rebuilding Vencord...
+    call pnpm build > NUL
+    echo.
+    echo All that's left now is to restart Discord ^(Ctrl + R^).
+    echo Don't forget to turn it on in Plugins tab^! ^(Press any key to return.^)
+    pause > NUL
+    cls
+    goto :3rdPartyMenu
+  )
 
 :gifCol
   echo downloading Gif Collection plugin
-
   mkdir .\\src\\userplugins\\vc-gif-collections 2> NUL || (
     rmdir .\\src\\userplugins\\vc-gif-collections /s /q 2>NUL
     mkdir .\\src\\userplugins\\vc-gif-collections
@@ -203,6 +208,7 @@ ENDLOCAL
     goto :EXIT
   )
 
+  :: This last one is built different - everything switch
   echo rebuilding Vencord...
   call pnpm build > NUL
   echo.
@@ -210,7 +216,8 @@ ENDLOCAL
   echo Don't forget to turn it on in Plugins tab^! ^(Press any key to return.^)
   pause > NUL
   cls
-  goto :3rdPartyMenu
+  if not "%~1"== "everything" goto :3rdPartyMenu
+  :EOF
 
 :update
   call git pull
@@ -235,12 +242,14 @@ ENDLOCAL
   goto :menu
 
 :injector
+  title Vencord External Updater [by Pawele] - Open Injector
   start /b cmd /C "pnpm inject"
   timeout 6 > NUL
   cls
   goto :menu
 
 :build
+  title Vencord External Updater [by Pawele]: Build
   call pnpm build
   echo.
   echo All that's left now is to restart Discord ^(Ctrl + R^).
@@ -258,49 +267,174 @@ ENDLOCAL
   goto :menu
 
 
-:install
-  echo  Notice: To install Vencord, you need the following:
-  echo  - installed node.js ^(at least LTS version^) - https://nodejs.org/
-  echo  - installed git - https://git-scm.com/downloads
-  echo  - installed pnpm ^(will install automatically but requires restart of this script^)
+:winget <package>
+  winget --version 2>NUL >NUL || (
+    echo [96mINFO:[0m It seems you don't have winget installed. Installing...
+    powershell -Command " Add-AppxPackage -Path 'https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx'; $releases_url = 'https://api.github.com/repos/microsoft/winget-cli/releases/latest'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $releases = Invoke-RestMethod -uri $releases_url; $latestRelease = $releases.assets | Where { $_.browser_download_url.EndsWith('msixbundle') } | Select -First 1; Add-AppxPackage -Path $latestRelease.browser_download_url "
+  )
+  winget --version 2>NUL >NUL || (
+    echo [93mERROR:[0m Installation of winget failed^! Aborting...
+    echo [96mI cannot install dependencies automagically.
+    echo To continue with installation, you need to manually install these tools:[0m
+    echo   - Git               ^( https://git-scm.com/downloads ^)
+    echo   - Node.js           ^( https://nodejs.org/ ^)
+    echo.
+    echo Press any key to exit.
+    pause >NUL
+    exit 0
+  )
+  powershell.exe -Command "& {winget install %~1 | ForEach-Object { if ($_ -notmatch '^\s\s\s[-|\\/]|^\s\s\s$') { $_ } if ($_ -match 'Failed when opening source') { exit 258 } }}"
+  if "%errorlevel%"=="258" (
+    :: source fail
+    call :sourceFix %~1
+    goto :EOF
+  )
+  if "%errorlevel%"=="-1978335189" (
+    :: already installed
+    echo [96;1;4mINFO: It seems you have this already installed, but it is not in the PATH.
+    echo In most cases, this can be fixed by restarting your computer.[0m
+        echo.
+        echo Press any key to exit.
+        pause >NUL
+        exit 0
+  )
+  if not "%errorlevel%"=="0" (
+        echo [93mERROR:[0m winget install failed!
+        echo ...Did you abort it? or maybe it's a problem with internet connection. Or smth else, idk.
+        echo Usually reboot helps, go try that i guess.
+        echo.
+        echo Press any key to exit.
+        pause >NUL
+        exit 0
+  )
   echo.
-  echo  Ensure you have node.js and git installed, it will save you quite some time
-  echo  ^(Press any key to continue.^)
-  pause > NUL
+  goto :EOF
 
+  :sourceFix
+    choice /C yn /N /M "Failure of loading sources detected. Would you like me to try and fix it? (Y/N)"
+    if "%errorlevel%"=="1" (
+      powershell -Command "Start-Process -FilePath 'winget' -ArgumentList 'source reset \-\-force' -Verb RunAs -WorkingDirectory 'C:\' "
+      timeout 3 >NUL
+      winget install %~1 || (
+        echo [93mERROR:[0m winget install failed and I'm not able to repair it myself!
+        echo ...maybe you have some extra aggressive firewall settings? Or no internet connection. Or smth else, idk.
+        echo Anyways, go fix your stuff and then come back.
+        echo.
+        echo Press any key to exit.
+        pause >NUL
+        exit 0
+      )
+    )
+    goto :EOF
+
+
+:install
+title Vencord Installation
+  echo.
+  echo  Notice: To install Vencord, you need the following tools:
+  echo  - git
+  echo  - node.js
+  echo  - pnpm
+  echo.
+  echo  [96mI'll try to install everything that is missing automatically.[0m
+  echo  Are you okay with that? (press any key to continue)
+  pause >NUL
+  echo.
+
+set postInstall="false"
   :: NODE.JS check
-  call node --version > NUL || (
-    echo [93mERROR:[0m It seems you don't have node.js installed.
-    echo You can download latest LTS version here: https://nodejs.org/
-    goto :exit
+  call node --version 2>NUL >NUL || (
+    IF EXIST %systemdrive%\Program Files\nodejs (
+      SET "PATH=%PATH%;%systemdrive%\Program Files\nodejs"
+    )
+  )
+  call node --version 2>NUL >NUL || (
+    echo [93mWARN:[0m It seems you don't have node.js installed.
+    title Installing Node.JS
+    echo Installing node.js LTS version...
+    call :winget OpenJS.NodeJS.LTS
+    set postInstall="true"
   )
   FOR /F "tokens=*" %%g IN ('call node --version') do ( set nodeVer=%%g )
   set nodeVer=%nodeVer:~1,3%
   set /a nodeVer=%nodeVer:.=%
   if not %nodeVer% geq 18 (
-    echo [93mERROR:[0m It seems you don't have the minimal required version of node.js ^(18^) installed.
-    echo You can download latest LTS version here: https://nodejs.org/
-    goto :exit
+    echo [93mWARN:[0m It seems you don't have the minimal required version of node.js installed.
+    title Updating Node.JS
+    echo Updating node.js LTS version...
+    call :winget OpenJS.NodeJS.LTS
+    set postInstall="true"
   )
+
   :: PNPM check
-  call pnpm --version > NUL || (
-    echo [93mWARN:[0m It seems you don't have pnpm installed. Installing now...
+  call pnpm --version 2>NUL >NUL || (
+    IF EXIST %APPDATA%\npm\node_modules\pnpm\bin (
+      SET "PATH=%PATH%;%APPDATA%\npm\node_modules\pnpm\bin"
+    )
+  )
+  call pnpm --version 2>NUL >NUL || (
+    title Installing pnpm
+    echo [96mINFO:[0m It seems you don't have pnpm installed. Installing now...
     call npm i -g pnpm
-    echo.
-    echo pnpm installed. Please close and open this script again to continue.
-    goto :exit
+    set postInstall="true"
   )
   FOR /F "tokens=*" %%g IN ('call pnpm --version') do ( set pnpmVer=%%g )
   set pnpmVer=%pnpmVer:~0,2%
   set /a pnpmVer=%pnpmVer:.=%
   if not %pnpmVer% geq 8 (
-    echo [93mERROR:[0m It seems you don't have the minimal required version of pnpm ^(8^) installed. Installing now...
-    call npm i -g pnpm
-    echo.
-    echo pnpm installed. Please close and open this script again to continue.
-    goto :exit
+    title Updating pnpm
+    echo [93mERROR:[0m It seems you don't have the minimal required version of pnpm installed. Updating now...
+    call npm i -g pnpm@latest
+    set postInstall="true"
   )
+
+  :: Git check
+  call git --version 2>NUL >NUL || (
+    IF EXIST %systemdrive%\Program Files\Git\cmd (
+      SET "PATH=%PATH%;%systemdrive%\Program Files\Git\cmd"
+    )
+  )
+  call git --version 2>NUL >NUL || (
+    title Installing Git
+    echo [96mINFO:[0m It seems you don't have git installed. Installing now...
+    call :winget Git.Git
+    set postInstall="true"
+  )
+
+  if %postInstall%=="true" (
+    title Applying new changes...
+    :: NodeJS
+    SET "PATH=%PATH%;%systemdrive%\Program Files\nodejs"
+    call node --version 2>NUL >NUL || (
+      echo [96;1;4mINFO: It seems computer restart is required for changes to apply.[0m
+      echo Press any key to exit.
+      pause >NUL
+      exit 0
+    )
+
+    title Applying new changes...
+    :: pnpm
+    SET "PATH=%PATH%;%APPDATA%\npm\node_modules\pnpm\bin"
+    call pnpm --version 2>NUL >NUL || (
+      echo [96;1;4mINFO: It seems computer restart is required for changes to apply.[0m
+      echo Press any key to exit.
+      pause >NUL
+      exit 0
+    )
+
+    title Applying new changes...
+    :: Git
+    SET "PATH=%PATH%;%systemdrive%\Program Files\Git\cmd"
+    call git --version 2>NUL >NUL || (
+      echo [96;1;4mINFO: It seems computer restart is required for changes to apply.[0m
+      echo Press any key to exit.
+      pause >NUL
+      exit 0
+    )
+  )
+    
   :: Install process
+  title Installing Vencord
   git clone https://github.com/Vendicated/Vencord ./gitclon/ && (
     cd gitclon
     robocopy . .. /MOVE /E > NUL
@@ -308,11 +442,15 @@ ENDLOCAL
     timeout 1 > NUL
     rmdir gitclon /s /q
   ) || (
-    echo [93mERROR:[0m Failed while cloning repository. Do you have git installed^?
+    echo [93mERROR:[0m Failed while cloning Vencord repository.
+    echo Press any key to exit.
+    pause >NUL
     goto :EXIT
   )
   mkdir .\\src\\userplugins
   echo.
+  title Installing optional 3rd party plugins
+  echo [3rd party plugins]
   CHOICE /C yn /N /M "Do you want to install Global badges plugin as well? (Y/N)"
   if "%errorlevel%"=="1" (
     curl -s https://raw.githubusercontent.com/HypedDomi/Vencord-Plugins/main/GlobalBadges/globalBadges.tsx > .\\src\\userplugins\\globalBadges.tsx
@@ -328,8 +466,7 @@ ENDLOCAL
       mkdir .\\src\\userplugins\\spotimbed
     )
     git clone https://codeberg.org/vap/vc-spotimbed .src//userplugins/spotimbed/ || (
-      echo [93mERROR:[0m Failed while cloning repository. Do you have git installed^?
-      goto :EXIT
+      echo [93mERROR:[0m Failed while cloning repository. Skipping...
     )
   )
   echo Spotimbed installed, don't forget to turn it on in Plugins tab^!
@@ -343,21 +480,26 @@ ENDLOCAL
       mkdir .\\src\\userplugins\\vc-gif-collections
     )
     git clone https://github.com/Syncxv/vc-gif-collections .src//userplugins/vc-gif-collections/ || (
-      echo [93mERROR:[0m Failed while cloning repository. Do you have git installed^?
-      goto :EXIT
+      echo [93mERROR:[0m Failed while cloning repository. Skipping...
     )
   )
   echo Gif Collection plugin installed, don't forget to turn it on in Plugins tab^!
   timeout 2 > NUL
   
+  title Final setup
+  echo.
   call pnpm install --frozen-lockfile || (
-    echo [93mWARN:[0m Failed while installing node_modules. Check the error to understand more.
+    echo [93mERROR:[0m Failed while installing node_modules. Check the error to understand more.
+    echo Press any key to exit.
+    pause >NUL
     goto :EXIT
   )
 
   call pnpm build
+  echo Done^! Now pick the Discord you use and inject it.
+  timeout 1 >NUL
   start /b cmd /C "pnpm inject"
-  timeout 6 > NUL
+  timeout 6 >NUL
   cls
   goto :menu
 
