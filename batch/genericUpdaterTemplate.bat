@@ -1,6 +1,6 @@
 @echo off
 :: 3, 4, 31, 35, 36
-set version=1.7
+set version=1.8
 set serverfile=UpdaterTemplate.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -25,11 +25,10 @@ IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
 title Update check && echo Checking for updates...
 if NOT exist %localappdata%\\PaweleConf\\ mkdir %localappdata%\\PaweleConf\\
 if exist %localappdata%\\PaweleConf\\"%~nx0" del %localappdata%\\PaweleConf\\"%~nx0"
-@powershell Invoke-WebRequest -Uri https://raw.githubusercontent.com/XaaRii/XaaRis_scripts/main/versions.ini -OutFile "%localappdata%/PaweleConf/versions.ini"
+curl -L https://raw.githubusercontent.com/XaaRii/XaaRis_scripts/main/versions.ini -o "%localappdata%/PaweleConf/versions.ini" 2> NUL
   for /f "delims=" %%x in (%localappdata%/PaweleConf/versions.ini) do %%x 2>NUL
   cls
   IF %version% NEQ %versionGenericUpdater% call :update
-  title  
   goto :main
 :update
 echo Current version: %version%               Available version: %versionGenericUpdater%
