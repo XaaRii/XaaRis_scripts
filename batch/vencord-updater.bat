@@ -1,7 +1,7 @@
 @if (@a==@b) @end /*
 :: Batch sector
 @echo off
-set version=2.0
+set version=2.1
 set serverfile=vencord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -113,6 +113,7 @@ goto :main
 
 :menu
   title Vencord External Updater [by Pawele]
+  echo Vencord folder: %vencordPath%
   echo _____________________________
   echo  What do you want to do?:
   echo    1 - update Vencord
@@ -156,7 +157,7 @@ goto :main
   if "%i1%"== "2" goto :spoEmb
   if "%i1%"== "3" goto :gifCol
   if "%i1%"== "9" call :gloBad "everything"
-  if "%i1%"== "0" goto :menu
+  if "%i1%"== "0" ( cls && goto :menu )
   cls
   echo Wrong choice. Try again:
   goto :3rdPartyMenu
@@ -278,12 +279,13 @@ goto :main
     echo To continue with installation, you need to manually install these tools:[0m
     echo   - Git               ^( https://git-scm.com/downloads ^)
     echo   - Node.js           ^( https://nodejs.org/ ^)
+    echo   - pnpm              ^( npm install -g pnpm@latest ^)
     echo.
     echo Press any key to exit.
     pause >NUL
     exit 0
   )
-  powershell.exe -Command "& {winget install %~1 | ForEach-Object { if ($_ -notmatch '^\s\s\s[-|\\/]|^\s\s\s$') { $_ } if ($_ -match 'Failed when opening source') { exit 258 } }}"
+  powershell.exe -Command "& {winget install %~1 --accept-source-agreements --accept-package-agreements | ForEach-Object { if ($_ -notmatch '^\s\s\s[-|\\/]|^\s\s\s$') { $_ } if ($_ -match 'Failed when opening source') { exit 258 } }}"
   if "%errorlevel%"=="258" (
     :: source fail
     call :sourceFix %~1
@@ -353,6 +355,7 @@ set postInstall="false"
     title Installing Node.JS
     echo Installing node.js LTS version...
     call :winget OpenJS.NodeJS.LTS
+    SET "PATH=%PATH%;%systemdrive%\Program Files\nodejs"
     set postInstall="true"
   )
   FOR /F "tokens=*" %%g IN ('call node --version') do ( set nodeVer=%%g )
@@ -370,12 +373,15 @@ set postInstall="false"
   call pnpm --version 2>NUL >NUL || (
     IF EXIST %APPDATA%\npm\node_modules\pnpm\bin (
       SET "PATH=%PATH%;%APPDATA%\npm\node_modules\pnpm\bin"
+      SET "PATH=%PATH%;%APPDATA%\npm\"
     )
   )
   call pnpm --version 2>NUL >NUL || (
     title Installing pnpm
     echo [96mINFO:[0m It seems you don't have pnpm installed. Installing now...
-    call npm i -g pnpm
+    call :winget pnpm
+      SET "PATH=%PATH%;%APPDATA%\npm\node_modules\pnpm\bin"
+      SET "PATH=%PATH%;%APPDATA%\npm\"
     set postInstall="true"
   )
   FOR /F "tokens=*" %%g IN ('call pnpm --version') do ( set pnpmVer=%%g )
@@ -398,110 +404,91 @@ set postInstall="false"
     title Installing Git
     echo [96mINFO:[0m It seems you don't have git installed. Installing now...
     call :winget Git.Git
+    SET "PATH=%PATH%;%systemdrive%\Program Files\Git\cmd"
     set postInstall="true"
   )
 
-  if %postInstall%=="true" (
+  if %postInstall%=="false" goto :installVen
+
+  :reloadInstall
     title Applying new changes...
-    :: NodeJS
-    SET "PATH=%PATH%;%systemdrive%\Program Files\nodejs"
-    call node --version 2>NUL >NUL || (
+    call node --version 2>NUL >NUL && call pnpm --version 2>NUL >NUL && call git --version 2>NUL >NUL || (
       echo [96;1;4mINFO: It seems computer restart is required for changes to apply.[0m
       echo Press any key to exit.
       pause >NUL
       exit 0
     )
 
-    title Applying new changes...
-    :: pnpm
-    SET "PATH=%PATH%;%APPDATA%\npm\node_modules\pnpm\bin"
-    call pnpm --version 2>NUL >NUL || (
-      echo [96;1;4mINFO: It seems computer restart is required for changes to apply.[0m
+  :installVen
+    :: Install process
+    title Installing Vencord
+    git clone https://github.com/Vendicated/Vencord ./gitclon/ && (
+      cd gitclon
+      robocopy . .. /MOVE /E > NUL
+      cd ..
+      timeout 1 > NUL
+      rmdir gitclon /s /q
+    ) || (
+      echo [93mERROR:[0m Failed while cloning Vencord repository.
       echo Press any key to exit.
       pause >NUL
-      exit 0
+      goto :EXIT
     )
+    mkdir .\\src\\userplugins
+    echo.
+    title Installing optional 3rd party plugins
+    echo [3rd party plugins]
+    CHOICE /C yn /N /M "Do you want to install Global badges plugin as well? (Y/N)"
+    if "%errorlevel%"=="1" (
+      curl -s https://raw.githubusercontent.com/HypedDomi/Vencord-Plugins/main/GlobalBadges/globalBadges.tsx > .\\src\\userplugins\\globalBadges.tsx
+    )
+    echo Global badges installed, don't forget to turn it on in Plugins tab^!
+    timeout 2 > NUL
 
-    title Applying new changes...
-    :: Git
-    SET "PATH=%PATH%;%systemdrive%\Program Files\Git\cmd"
-    call git --version 2>NUL >NUL || (
-      echo [96;1;4mINFO: It seems computer restart is required for changes to apply.[0m
+    echo.
+    CHOICE /C yn /N /M "Do you want to install Spotify embed fix plugin as well? (Y/N)"
+    if "%errorlevel%"=="1" (
+      mkdir .\\src\\userplugins\\spotimbed\\ 2> NUL || (
+        rmdir .\\src\\userplugins\\spotimbed /s /q
+        mkdir .\\src\\userplugins\\spotimbed
+      )
+      git clone https://codeberg.org/vap/vc-spotimbed .src//userplugins/spotimbed/ || (
+        echo [93mERROR:[0m Failed while cloning repository. Skipping...
+      )
+    )
+    echo Spotimbed installed, don't forget to turn it on in Plugins tab^!
+    timeout 2 > NUL
+
+    echo.
+    CHOICE /C yn /N /M "Do you want to install Gif Collection plugin as well? (Y/N)"
+    if "%errorlevel%"=="1" (
+      mkdir .\\src\\userplugins\\vc-gif-collections\\ 2> NUL || (
+        rmdir .\\src\\userplugins\\vc-gif-collections /s /q
+        mkdir .\\src\\userplugins\\vc-gif-collections
+      )
+      git clone https://github.com/Syncxv/vc-gif-collections .src//userplugins/vc-gif-collections/ || (
+        echo [93mERROR:[0m Failed while cloning repository. Skipping...
+      )
+    )
+    echo Gif Collection plugin installed, don't forget to turn it on in Plugins tab^!
+    timeout 2 > NUL
+
+    title Final setup
+    echo.
+    call pnpm install --frozen-lockfile || (
+      echo [93mERROR:[0m Failed while installing node_modules. Check the error to understand more.
       echo Press any key to exit.
       pause >NUL
-      exit 0
+      goto :EXIT
     )
-  )
-    
-  :: Install process
-  title Installing Vencord
-  git clone https://github.com/Vendicated/Vencord ./gitclon/ && (
-    cd gitclon
-    robocopy . .. /MOVE /E > NUL
-    cd ..
-    timeout 1 > NUL
-    rmdir gitclon /s /q
-  ) || (
-    echo [93mERROR:[0m Failed while cloning Vencord repository.
-    echo Press any key to exit.
-    pause >NUL
-    goto :EXIT
-  )
-  mkdir .\\src\\userplugins
-  echo.
-  title Installing optional 3rd party plugins
-  echo [3rd party plugins]
-  CHOICE /C yn /N /M "Do you want to install Global badges plugin as well? (Y/N)"
-  if "%errorlevel%"=="1" (
-    curl -s https://raw.githubusercontent.com/HypedDomi/Vencord-Plugins/main/GlobalBadges/globalBadges.tsx > .\\src\\userplugins\\globalBadges.tsx
-  )
-  echo Global badges installed, don't forget to turn it on in Plugins tab^!
-  timeout 2 > NUL
 
-  echo.
-  CHOICE /C yn /N /M "Do you want to install Spotify embed fix plugin as well? (Y/N)"
-  if "%errorlevel%"=="1" (
-    mkdir .\\src\\userplugins\\spotimbed\\ 2> NUL || (
-      rmdir .\\src\\userplugins\\spotimbed /s /q
-      mkdir .\\src\\userplugins\\spotimbed
-    )
-    git clone https://codeberg.org/vap/vc-spotimbed .src//userplugins/spotimbed/ || (
-      echo [93mERROR:[0m Failed while cloning repository. Skipping...
-    )
-  )
-  echo Spotimbed installed, don't forget to turn it on in Plugins tab^!
-  timeout 2 > NUL
-
-  echo.
-  CHOICE /C yn /N /M "Do you want to install Gif Collection plugin as well? (Y/N)"
-  if "%errorlevel%"=="1" (
-    mkdir .\\src\\userplugins\\vc-gif-collections\\ 2> NUL || (
-      rmdir .\\src\\userplugins\\vc-gif-collections /s /q
-      mkdir .\\src\\userplugins\\vc-gif-collections
-    )
-    git clone https://github.com/Syncxv/vc-gif-collections .src//userplugins/vc-gif-collections/ || (
-      echo [93mERROR:[0m Failed while cloning repository. Skipping...
-    )
-  )
-  echo Gif Collection plugin installed, don't forget to turn it on in Plugins tab^!
-  timeout 2 > NUL
-  
-  title Final setup
-  echo.
-  call pnpm install --frozen-lockfile || (
-    echo [93mERROR:[0m Failed while installing node_modules. Check the error to understand more.
-    echo Press any key to exit.
-    pause >NUL
-    goto :EXIT
-  )
-
-  call pnpm build
-  echo Done^! Now pick the Discord you use and inject it.
-  timeout 1 >NUL
-  start /b cmd /C "pnpm inject"
-  timeout 6 >NUL
-  cls
-  goto :menu
+    call pnpm build
+    echo Done^! Now pick the Discord you use and inject it.
+    timeout 1 >NUL
+    start /b cmd /C "pnpm inject"
+    timeout 6 >NUL
+    cls
+    goto :menu
 
 
 :settings
