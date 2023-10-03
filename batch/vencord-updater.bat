@@ -1,9 +1,8 @@
 @if (@a==@b) @end /*
 :: Batch sector
 @echo off
-set version=2.1
+set version=2.2
 set serverfile=vencord-updater.bat
-if "%1"=="finalize" goto :finalize
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
     if defined updn (
@@ -223,6 +222,10 @@ goto :main
 
 :update
   call git pull
+  echo installing packages from lockfile...
+  call pnpm install --frozen-lockfile >NUL || (
+    echo [93mERROR:[0m Failed while installing node_modules. Check the error to understand more.
+  )
   echo.
   echo Done^! ^(Press any key to return to the main menu.^)
   pause > NUL
@@ -235,6 +238,10 @@ goto :main
   
   call git reset --hard
   call git pull
+  echo installing packages from lockfile...
+  call pnpm install --frozen-lockfile >NUL || (
+    echo [93mERROR:[0m Failed while installing node_modules. Check the error to understand more.
+  )
 
   robocopy "%localappdata%\\PaweleConf\\backup\\src\\userplugins" ".\\src\\userplugins" /MOVE /E > NUL
   echo.
@@ -252,10 +259,7 @@ goto :main
 
 :build
   title Vencord External Updater [by Pawele]: Build
-  call pnpm build 2>NUL || (
-    call pnpm install --frozen-lockfile
-    call pnpm build
-  )
+  call pnpm build
   echo.
   echo All that's left now is to restart Discord ^(Ctrl + R^).
   echo Done^! ^(Press any key to return to the main menu.^)
@@ -383,10 +387,9 @@ set postInstall="false"
   call pnpm --version 2>NUL >NUL || (
     title Installing pnpm
     echo [96mINFO:[0m It seems you don't have pnpm installed. Installing now...
-    ::call :winget pnpm
-    call npm i -g pnpm@latest
-    SET "PATH=%PATH%;%APPDATA%\npm\node_modules\pnpm\bin"
-    SET "PATH=%PATH%;%APPDATA%\npm\"
+    call :winget pnpm
+      SET "PATH=%PATH%;%APPDATA%\npm\node_modules\pnpm\bin"
+      SET "PATH=%PATH%;%APPDATA%\npm\"
     set postInstall="true"
   )
   FOR /F "tokens=*" %%g IN ('call pnpm --version') do ( set pnpmVer=%%g )
@@ -457,7 +460,7 @@ set postInstall="false"
         rmdir .\\src\\userplugins\\spotimbed /s /q
         mkdir .\\src\\userplugins\\spotimbed
       )
-      git clone https://codeberg.org/vap/vc-spotimbed ./src/userplugins/spotimbed/ || (
+      git clone https://codeberg.org/vap/vc-spotimbed .src//userplugins/spotimbed/ || (
         echo [93mERROR:[0m Failed while cloning repository. Skipping...
       )
     )
@@ -471,30 +474,29 @@ set postInstall="false"
         rmdir .\\src\\userplugins\\vc-gif-collections /s /q
         mkdir .\\src\\userplugins\\vc-gif-collections
       )
-      git clone https://github.com/Syncxv/vc-gif-collections ./src/userplugins/vc-gif-collections/ || (
+      git clone https://github.com/Syncxv/vc-gif-collections .src//userplugins/vc-gif-collections/ || (
         echo [93mERROR:[0m Failed while cloning repository. Skipping...
       )
     )
     echo Gif Collection plugin installed, don't forget to turn it on in Plugins tab^!
     timeout 2 > NUL
 
-    :finalize
-      title Final setup
-      echo.
-      call pnpm install --frozen-lockfile 2>NUL || (
-        echo [93mERROR:[0m Failed while installing node_modules. Retrying...
-        call "%~dpnx0" finalize
-        exit 0
-      )
+    title Final setup
+    echo.
+    call pnpm install --frozen-lockfile || (
+      echo [93mERROR:[0m Failed while installing node_modules. Check the error to understand more.
+      echo Press any key to exit.
+      pause >NUL
+      goto :EXIT
+    )
 
-      call pnpm build
-      echo Done^! Now pick the Discord you use and inject it.
-      timeout 1 >NUL
-
-      start /b cmd /C "pnpm inject"
-      timeout 6 >NUL
-      cls
-      goto :menu
+    call pnpm build
+    echo Done^! Now pick the Discord you use and inject it.
+    timeout 1 >NUL
+    start /b cmd /C "pnpm inject"
+    timeout 6 >NUL
+    cls
+    goto :menu
 
 
 :settings
