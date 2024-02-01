@@ -1,7 +1,7 @@
 @if (@a==@b) @end /*
 :: Batch sector
 @echo off
-set version=2.2
+set version=2.3
 set serverfile=vencord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -145,7 +145,8 @@ goto :main
   echo  3rd party plugin menu:
   echo    1 - install/update Global badges
   echo    2 - install/update Spotimbed (Spotify embed fix)
-  echo    3 - install/update Gif Collection
+  echo    3 - install/update SoundBoardLogger
+  echo    4 - install/update Gif Collection
   echo.
   echo.
   echo    9 - install/update all
@@ -155,7 +156,8 @@ goto :main
   set /p i1="> "
   if "%i1%"== "1" goto :gloBad
   if "%i1%"== "2" goto :spoEmb
-  if "%i1%"== "3" goto :gifCol
+  if "%i1%"== "3" goto :sblogger
+  if "%i1%"== "4" goto :gifCol
   if "%i1%"== "9" call :gloBad "everything"
   if "%i1%"== "0" ( cls && goto :menu )
   cls
@@ -183,6 +185,28 @@ goto :main
     mkdir .\\src\\userplugins\\spotimbed
   )
   git clone https://codeberg.org/vap/vc-spotimbed ./src/userplugins/spotimbed/ || (
+    echo [93mERROR:[0m Failed while cloning repository. Report this to Pawele, he'll look into it.
+    goto :EXIT
+  )
+
+  if not "%~1"== "everything" (
+    echo rebuilding Vencord...
+    call pnpm build > NUL
+    echo.
+    echo All that's left now is to restart Discord ^(Ctrl + R^).
+    echo Don't forget to turn it on in Plugins tab^! ^(Press any key to return.^)
+    pause > NUL
+    cls
+    goto :3rdPartyMenu
+  )
+
+:sblogger
+  echo downloading SoundBoardLogger
+  mkdir .\\src\\userplugins\\soundboardLog 2> NUL || (
+    rmdir .\\src\\userplugins\\soundboardLog /s /q 2>NUL
+    mkdir .\\src\\userplugins\\soundboardLog
+  )
+  git clone https://github.com/ImpishMoxxie/SoundBoardLogger ./src/userplugins/soundboardLog/ || (
     echo [93mERROR:[0m Failed while cloning repository. Report this to Pawele, he'll look into it.
     goto :EXIT
   )
