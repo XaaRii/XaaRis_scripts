@@ -1,7 +1,7 @@
 @if (@a==@b) @end /*
 :: Batch sector
 @echo off
-set version=2.3
+set version=2.4
 set serverfile=vencord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -276,8 +276,8 @@ goto :main
 
 :injector
   title Vencord External Updater [by Pawele] - Open Injector
-  start /b cmd /C "pnpm inject"
-  timeout 6 > NUL
+  call pnpm inject
+  timeout 1 > NUL
   cls
   goto :menu
 
@@ -473,9 +473,9 @@ set postInstall="false"
     CHOICE /C yn /N /M "Do you want to install Global badges plugin as well? (Y/N)"
     if "%errorlevel%"=="1" (
       curl -s https://raw.githubusercontent.com/HypedDomi/Vencord-Plugins/main/GlobalBadges/globalBadges.tsx > .\\src\\userplugins\\globalBadges.tsx
-    )
     echo Global badges installed, don't forget to turn it on in Plugins tab^!
     timeout 2 > NUL
+    )
 
     echo.
     CHOICE /C yn /N /M "Do you want to install Spotify embed fix plugin as well? (Y/N)"
@@ -487,9 +487,9 @@ set postInstall="false"
       git clone https://codeberg.org/vap/vc-spotimbed .src//userplugins/spotimbed/ || (
         echo [93mERROR:[0m Failed while cloning repository. Skipping...
       )
-    )
     echo Spotimbed installed, don't forget to turn it on in Plugins tab^!
     timeout 2 > NUL
+    )
 
     echo.
     CHOICE /C yn /N /M "Do you want to install Gif Collection plugin as well? (Y/N)"
@@ -501,9 +501,9 @@ set postInstall="false"
       git clone https://github.com/Syncxv/vc-gif-collections .src//userplugins/vc-gif-collections/ || (
         echo [93mERROR:[0m Failed while cloning repository. Skipping...
       )
-    )
     echo Gif Collection plugin installed, don't forget to turn it on in Plugins tab^!
     timeout 2 > NUL
+    )
 
     title Final setup
     echo.
@@ -517,7 +517,7 @@ set postInstall="false"
     call pnpm build
     echo Done^! Now pick the Discord you use and inject it.
     timeout 1 >NUL
-    start /b cmd /C "pnpm inject"
+    call pnpm inject
     timeout 6 >NUL
     cls
     goto :menu
