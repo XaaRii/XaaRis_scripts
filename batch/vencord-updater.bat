@@ -1,7 +1,7 @@
 @if (@a==@b) @end /*
 :: Batch sector
 @echo off
-set version=2.5
+set version=2.6
 set serverfile=vencord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -178,6 +178,13 @@ goto :main
   )
   endlocal
   echo.
+  CHOICE /C yn /N /M "Done. Would you like to rebuild Vencord? (Y/N)"
+  if "%errorlevel%"=="1" (
+    echo rebuilding Vencord...
+    call pnpm build > NUL
+    echo.
+    echo All that's left now is to restart Discord ^(Ctrl + R^).
+  )
   echo Done^! ^(Press any key to return^)
   pause > NUL
   cls
