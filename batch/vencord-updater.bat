@@ -1,7 +1,7 @@
 @if (@a==@b) @end /*
 :: Batch sector
 @echo off
-set version=2.4
+set version=2.5
 set serverfile=vencord-updater.bat
 IF /i "%~dp0"=="%localappdata%\PaweleConf\" (
   if "%1" == "update" (
@@ -144,29 +144,58 @@ goto :main
   echo ____________________________________
   echo  3rd party plugin menu:
   echo    1 - install/update Global badges
-  echo    2 - install/update Spotimbed (Spotify embed fix)
-  echo    3 - install/update SoundBoardLogger
-  echo    4 - install/update Gif Collection
+::  echo    2 - install/update Spotimbed (Spotify embed fix)
+::  echo    3 - install/update SoundBoardLogger
+::  echo    4 - install/update Gif Collection
   echo.
   echo.
-  echo    9 - install/update all
+  echo    9 - update existing
   echo    0 - go back
   echo ____________________________________
   set i1=
   set /p i1="> "
   if "%i1%"== "1" goto :gloBad
-  if "%i1%"== "2" goto :spoEmb
-  if "%i1%"== "3" goto :sblogger
-  if "%i1%"== "4" goto :gifCol
-  if "%i1%"== "9" call :gloBad "everything"
+::  if "%i1%"== "2" goto :spoEmb
+::  if "%i1%"== "3" goto :sblogger
+::  if "%i1%"== "4" goto :gifCol
+  if "%i1%"== "9" call :gitpullplugins
   if "%i1%"== "0" ( cls && goto :menu )
   cls
   echo Wrong choice. Try again:
   goto :3rdPartyMenu
 
+:gitpullplugins
+  setlocal enabledelayedexpansion
+
+  for /d %%D in (".\src\userplugins\*") do (
+    if exist "%%D\.git" (
+      echo Pulling %%D
+
+      pushd "%%D"
+      git pull
+      popd
+    )
+  )
+  endlocal
+  echo.
+  echo Done^! ^(Press any key to return^)
+  pause > NUL
+  cls
+  goto :3rdPartyMenu
+
 :gloBad <everything>
   echo downloading Global badges...
-  curl -s https://raw.githubusercontent.com/HypedDomi/Vencord-Plugins/main/GlobalBadges/globalBadges.tsx > .\\src\\userplugins\\globalBadges.tsx
+::  curl -s https://raw.githubusercontent.com/HypedDomi/Vencord-Plugins/main/GlobalBadges/globalBadges.tsx > .\\src\\userplugins\\globalBadges.tsx
+  mkdir .\\src\\userplugins\\globalbadges 2> NUL || (
+    rmdir .\\src\\userplugins\\globalbadges /s /q 2>NUL
+    mkdir .\\src\\userplugins\\globalbadges
+  )
+  git clone https://github.com/Domis-Vencord-Plugins/GlobalBadges ./src/userplugins/globalbadges/ || (
+    echo [93mERROR:[0m Failed while cloning repository. Report this to Pawele, he'll look into it.
+    goto :EXIT
+  )
+
+
   if not "%~1"== "everything" (
     echo rebuilding Vencord...
     call pnpm build > NUL
@@ -276,7 +305,7 @@ goto :main
 
 :injector
   title Vencord External Updater [by Pawele] - Open Injector
-  call pnpm inject
+  call node scripts/runInstaller.mjs --
   timeout 1 > NUL
   cls
   goto :menu
@@ -467,43 +496,24 @@ set postInstall="false"
       goto :EXIT
     )
     mkdir .\\src\\userplugins
-    echo.
+
     title Installing optional 3rd party plugins
+    echo.
     echo [3rd party plugins]
     CHOICE /C yn /N /M "Do you want to install Global badges plugin as well? (Y/N)"
     if "%errorlevel%"=="1" (
-      curl -s https://raw.githubusercontent.com/HypedDomi/Vencord-Plugins/main/GlobalBadges/globalBadges.tsx > .\\src\\userplugins\\globalBadges.tsx
+      mkdir .\\src\\userplugins\\globalbadges\\ 2> NUL || (
+        rmdir .\\src\\userplugins\\globalbadges /s /q 2>NUL
+        mkdir .\\src\\userplugins\\globalbadges
+      )
+      git clone https://github.com/Domis-Vencord-Plugins/GlobalBadges .src/userplugins/globalbadges/ || (
+        echo [93mERROR:[0m Failed while cloning repository. Skipping...
+      )
     echo Global badges installed, don't forget to turn it on in Plugins tab^!
     timeout 2 > NUL
     )
 
-    echo.
-    CHOICE /C yn /N /M "Do you want to install Spotify embed fix plugin as well? (Y/N)"
-    if "%errorlevel%"=="1" (
-      mkdir .\\src\\userplugins\\spotimbed\\ 2> NUL || (
-        rmdir .\\src\\userplugins\\spotimbed /s /q
-        mkdir .\\src\\userplugins\\spotimbed
-      )
-      git clone https://codeberg.org/vap/vc-spotimbed .src//userplugins/spotimbed/ || (
-        echo [93mERROR:[0m Failed while cloning repository. Skipping...
-      )
-    echo Spotimbed installed, don't forget to turn it on in Plugins tab^!
-    timeout 2 > NUL
-    )
 
-    echo.
-    CHOICE /C yn /N /M "Do you want to install Gif Collection plugin as well? (Y/N)"
-    if "%errorlevel%"=="1" (
-      mkdir .\\src\\userplugins\\vc-gif-collections\\ 2> NUL || (
-        rmdir .\\src\\userplugins\\vc-gif-collections /s /q
-        mkdir .\\src\\userplugins\\vc-gif-collections
-      )
-      git clone https://github.com/Syncxv/vc-gif-collections .src//userplugins/vc-gif-collections/ || (
-        echo [93mERROR:[0m Failed while cloning repository. Skipping...
-      )
-    echo Gif Collection plugin installed, don't forget to turn it on in Plugins tab^!
-    timeout 2 > NUL
-    )
 
     title Final setup
     echo.
